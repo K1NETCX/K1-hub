@@ -1,15 +1,13 @@
 --[[
-	Axis Interface Suite
-	by 6q0t
+	Axis Interface Suite 
 
 6q0t | Designing + Programming
-
+Rayfield Sintaxe
 ]]
+
 if debugX then
 	warn('Initialising Axis')
 end
-
-
 
 local function getService(name)
 	local service = game:GetService(name)
@@ -31,17 +29,16 @@ local function loadWithTimeout(url: string, timeout: number?): ...any
 	local success, result = false, nil
 
 	local requestThread = task.spawn(function()
-		local fetchSuccess, fetchResult = pcall(game.HttpGet, game, url) -- game:HttpGet(url)
-		-- If the request fails the content can be empty, even if fetchSuccess is true
+		local fetchSuccess, fetchResult = pcall(game.HttpGet, game, url)
 		if not fetchSuccess or #fetchResult == 0 then
 			if #fetchResult == 0 then
-				fetchResult = "Empty response" -- Set the error message
+				fetchResult = "Empty response"
 			end
 			success, result = false, fetchResult
 			requestCompleted = true
 			return
 		end
-		local content = fetchResult -- Fetched content
+		local content = fetchResult
 		local execSuccess, execResult = pcall(function()
 			return loadstring(content)()
 		end)
@@ -58,11 +55,9 @@ local function loadWithTimeout(url: string, timeout: number?): ...any
 		end
 	end)
 
-	-- Wait for completion or timeout
 	while not requestCompleted do
 		task.wait()
 	end
-	-- Cancel timeout thread if still running when request completes
 	if coroutine.status(timeoutThread) ~= "dead" then
 		task.cancel(timeoutThread)
 	end
@@ -109,6 +104,7 @@ local function secureNotify(wType, title, content)
 		})
 	end)
 end
+
 local InterfaceBuild = 'UU2NX'
 local Release = "Build 1.746"
 local AxisFolder = "Axis"
@@ -116,20 +112,14 @@ local ConfigurationFolder = AxisFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
 local settingsTable = {
 	General = {
-		-- if needs be in order just make getSetting(name)
 		axisOpen = {Type = 'bind', Value = 'K', Name = 'Axis Keybind'},
-		-- buildwarnings
-		-- axisprompts
-
 	},
 	System = {
 		usageAnalytics = {Type = 'toggle', Value = true, Name = 'Anonymised Analytics'},
 	}
 }
 
--- Settings that have been overridden by the developer. These will not be saved to the user's configuration file
--- Overridden settings always take precedence over settings in the configuration file, and are cleared if the user changes the setting in the UI
-local overriddenSettings: { [string]: any } = {} -- For example, overriddenSettings["System.axisOpen"] = "J"
+local overriddenSettings: { [string]: any } = {}
 local function overrideSetting(category: string, name: string, value: any)
 	overriddenSettings[category .. "." .. name] = value
 end
@@ -142,33 +132,26 @@ local function getSetting(category: string, name: string): any
 	end
 end
 
--- If requests/analytics have been disabled by developer, set the user-facing setting to false as well
 if requestsDisabled then
 	overrideSetting("System", "usageAnalytics", false)
 end
 
 local HttpService = getService('HttpService')
 local RunService = getService('RunService')
-
--- Environment Check
 local useStudio = RunService:IsStudio() or false
 
 local settingsCreated = false
-local settingsInitialized = false -- Whether the UI elements in the settings page have been set to the proper values
+local settingsInitialized = false
 local prompt = useStudio and require(script.Parent.prompt) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua')
 local requestFunc = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
--- Validate prompt loaded correctly
 if not prompt and not useStudio then
 	warn("Failed to load prompt library, using fallback")
 	prompt = {
-		create = function() end -- No-op fallback
+		create = function() end
 	}
 end
 
-
--- The function below provides a safe alternative for calling error-prone functions
--- Especially useful for filesystem function (writefile, makefolder, etc.)
 local function callSafely(func, ...)
 	if func then
 		local success, result = pcall(func, ...)
@@ -181,7 +164,6 @@ local function callSafely(func, ...)
 	end
 end
 
--- Ensures a folder exists by creating it if needed
 local function ensureFolder(folderPath)
 	if isfolder and not callSafely(isfolder, folderPath) then
 		callSafely(makefolder, folderPath)
@@ -191,14 +173,13 @@ end
 local function loadSettings()
 	local file = nil
 
-	local success, result =	pcall(function()
+	local success, result = pcall(function()
 		if callSafely(isfolder, AxisFolder) then
 			if callSafely(isfile, AxisFolder..'/settings'..ConfigurationExtension) then
 				file = callSafely(readfile, AxisFolder..'/settings'..ConfigurationExtension)
 			end
 		end
 
-		-- for debug in studio
 		if useStudio then
 			file = [[
 	{"General":{"axisOpen":{"Value":"K","Type":"bind","Name":"Axis Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Axis Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":false,"Callback":null}}}}
@@ -216,7 +197,6 @@ local function loadSettings()
 			file = {}
 		end
 
-
 		if not settingsCreated then
 			return
 		end
@@ -232,7 +212,6 @@ local function loadSettings()
 					end
 				end
 			end
-		-- If no settings saved, apply overridden settings only
 		else
 			for settingName, settingValue in overriddenSettings do
 				local split = string.split(settingName, ".")
@@ -254,15 +233,7 @@ local function loadSettings()
 	end
 end
 
-if debugX then
-	warn('Now Loading Settings Configuration')
-end
-
 loadSettings()
-
-if debugX then
-	warn('Settings Loaded')
-end
 
 local ANALYTICS_TOKEN = "05de7f9fd320d3b8428cd1c77014a337b85b6c8efee2c5914f5ab5700c354b9a"
 
@@ -296,410 +267,58 @@ if promptUser == 1 and prompt and type(prompt.create) == "function" then
 <font transparency='0.3'>Some scripts may steal your items or in-game goods.</font>]],
 		'Okay',
 		'',
-		function()
-
-		end
+		function() end
 	)
-end
-
-if debugX then
-	warn('Moving on to continue initialisation')
 end
 
 local AxisLibrary = {
 	Flags = {},
 	Theme = {
-		Default = {
-			TextColor = Color3.fromRGB(240, 240, 240),
-
-			Background = Color3.fromRGB(25, 25, 25),
-			Topbar = Color3.fromRGB(34, 34, 34),
-			Shadow = Color3.fromRGB(20, 20, 20),
-
-			NotificationBackground = Color3.fromRGB(20, 20, 20),
-			NotificationActionsBackground = Color3.fromRGB(230, 230, 230),
-
-			TabBackground = Color3.fromRGB(80, 80, 80),
-			TabStroke = Color3.fromRGB(85, 85, 85),
-			TabBackgroundSelected = Color3.fromRGB(210, 210, 210),
-			TabTextColor = Color3.fromRGB(240, 240, 240),
-			SelectedTabTextColor = Color3.fromRGB(50, 50, 50),
-
-			ElementBackground = Color3.fromRGB(35, 35, 35),
-			ElementBackgroundHover = Color3.fromRGB(40, 40, 40),
-			SecondaryElementBackground = Color3.fromRGB(25, 25, 25),
-			ElementStroke = Color3.fromRGB(50, 50, 50),
-			SecondaryElementStroke = Color3.fromRGB(40, 40, 40),
-
-			SliderBackground = Color3.fromRGB(50, 138, 220),
-			SliderProgress = Color3.fromRGB(50, 138, 220),
-			SliderStroke = Color3.fromRGB(58, 163, 255),
-
-			ToggleBackground = Color3.fromRGB(30, 30, 30),
-			ToggleEnabled = Color3.fromRGB(0, 146, 214),
-			ToggleDisabled = Color3.fromRGB(100, 100, 100),
-			ToggleEnabledStroke = Color3.fromRGB(0, 170, 255),
-			ToggleDisabledStroke = Color3.fromRGB(125, 125, 125),
-			ToggleEnabledOuterStroke = Color3.fromRGB(100, 100, 100),
-			ToggleDisabledOuterStroke = Color3.fromRGB(65, 65, 65),
-
-			DropdownSelected = Color3.fromRGB(40, 40, 40),
-			DropdownUnselected = Color3.fromRGB(30, 30, 30),
-
-			InputBackground = Color3.fromRGB(30, 30, 30),
-			InputStroke = Color3.fromRGB(65, 65, 65),
-			PlaceholderColor = Color3.fromRGB(178, 178, 178)
-		},
-
-		Ocean = {
-			TextColor = Color3.fromRGB(230, 240, 240),
-
-			Background = Color3.fromRGB(20, 30, 30),
-			Topbar = Color3.fromRGB(25, 40, 40),
-			Shadow = Color3.fromRGB(15, 20, 20),
-
-			NotificationBackground = Color3.fromRGB(25, 35, 35),
-			NotificationActionsBackground = Color3.fromRGB(230, 240, 240),
-
-			TabBackground = Color3.fromRGB(40, 60, 60),
-			TabStroke = Color3.fromRGB(50, 70, 70),
-			TabBackgroundSelected = Color3.fromRGB(100, 180, 180),
-			TabTextColor = Color3.fromRGB(210, 230, 230),
-			SelectedTabTextColor = Color3.fromRGB(20, 50, 50),
-
-			ElementBackground = Color3.fromRGB(30, 50, 50),
-			ElementBackgroundHover = Color3.fromRGB(40, 60, 60),
-			SecondaryElementBackground = Color3.fromRGB(30, 45, 45),
-			ElementStroke = Color3.fromRGB(45, 70, 70),
-			SecondaryElementStroke = Color3.fromRGB(40, 65, 65),
-
-			SliderBackground = Color3.fromRGB(0, 110, 110),
-			SliderProgress = Color3.fromRGB(0, 140, 140),
-			SliderStroke = Color3.fromRGB(0, 160, 160),
-
-			ToggleBackground = Color3.fromRGB(30, 50, 50),
-			ToggleEnabled = Color3.fromRGB(0, 130, 130),
-			ToggleDisabled = Color3.fromRGB(70, 90, 90),
-			ToggleEnabledStroke = Color3.fromRGB(0, 160, 160),
-			ToggleDisabledStroke = Color3.fromRGB(85, 105, 105),
-			ToggleEnabledOuterStroke = Color3.fromRGB(50, 100, 100),
-			ToggleDisabledOuterStroke = Color3.fromRGB(45, 65, 65),
-
-			DropdownSelected = Color3.fromRGB(30, 60, 60),
-			DropdownUnselected = Color3.fromRGB(25, 40, 40),
-
-			InputBackground = Color3.fromRGB(30, 50, 50),
-			InputStroke = Color3.fromRGB(50, 70, 70),
-			PlaceholderColor = Color3.fromRGB(140, 160, 160)
-		},
-
-		AmberGlow = {
-			TextColor = Color3.fromRGB(255, 245, 230),
-
-			Background = Color3.fromRGB(45, 30, 20),
-			Topbar = Color3.fromRGB(55, 40, 25),
-			Shadow = Color3.fromRGB(35, 25, 15),
-
-			NotificationBackground = Color3.fromRGB(50, 35, 25),
-			NotificationActionsBackground = Color3.fromRGB(245, 230, 215),
-
-			TabBackground = Color3.fromRGB(75, 50, 35),
-			TabStroke = Color3.fromRGB(90, 60, 45),
-			TabBackgroundSelected = Color3.fromRGB(230, 180, 100),
-			TabTextColor = Color3.fromRGB(250, 220, 200),
-			SelectedTabTextColor = Color3.fromRGB(50, 30, 10),
-
-			ElementBackground = Color3.fromRGB(60, 45, 35),
-			ElementBackgroundHover = Color3.fromRGB(70, 50, 40),
-			SecondaryElementBackground = Color3.fromRGB(55, 40, 30),
-			ElementStroke = Color3.fromRGB(85, 60, 45),
-			SecondaryElementStroke = Color3.fromRGB(75, 50, 35),
-
-			SliderBackground = Color3.fromRGB(220, 130, 60),
-			SliderProgress = Color3.fromRGB(250, 150, 75),
-			SliderStroke = Color3.fromRGB(255, 170, 85),
-
-			ToggleBackground = Color3.fromRGB(55, 40, 30),
-			ToggleEnabled = Color3.fromRGB(240, 130, 30),
-			ToggleDisabled = Color3.fromRGB(90, 70, 60),
-			ToggleEnabledStroke = Color3.fromRGB(255, 160, 50),
-			ToggleDisabledStroke = Color3.fromRGB(110, 85, 75),
-			ToggleEnabledOuterStroke = Color3.fromRGB(200, 100, 50),
-			ToggleDisabledOuterStroke = Color3.fromRGB(75, 60, 55),
-
-			DropdownSelected = Color3.fromRGB(70, 50, 40),
-			DropdownUnselected = Color3.fromRGB(55, 40, 30),
-
-			InputBackground = Color3.fromRGB(60, 45, 35),
-			InputStroke = Color3.fromRGB(90, 65, 50),
-			PlaceholderColor = Color3.fromRGB(190, 150, 130)
-		},
-
-		Light = {
-			TextColor = Color3.fromRGB(40, 40, 40),
-
-			Background = Color3.fromRGB(245, 245, 245),
-			Topbar = Color3.fromRGB(230, 230, 230),
-			Shadow = Color3.fromRGB(200, 200, 200),
-
-			NotificationBackground = Color3.fromRGB(250, 250, 250),
-			NotificationActionsBackground = Color3.fromRGB(240, 240, 240),
-
-			TabBackground = Color3.fromRGB(235, 235, 235),
-			TabStroke = Color3.fromRGB(215, 215, 215),
-			TabBackgroundSelected = Color3.fromRGB(255, 255, 255),
-			TabTextColor = Color3.fromRGB(80, 80, 80),
-			SelectedTabTextColor = Color3.fromRGB(0, 0, 0),
-
-			ElementBackground = Color3.fromRGB(240, 240, 240),
-			ElementBackgroundHover = Color3.fromRGB(225, 225, 225),
-			SecondaryElementBackground = Color3.fromRGB(235, 235, 235),
-			ElementStroke = Color3.fromRGB(210, 210, 210),
-			SecondaryElementStroke = Color3.fromRGB(210, 210, 210),
-
-			SliderBackground = Color3.fromRGB(150, 180, 220),
-			SliderProgress = Color3.fromRGB(100, 150, 200), 
-			SliderStroke = Color3.fromRGB(120, 170, 220),
-
-			ToggleBackground = Color3.fromRGB(220, 220, 220),
-			ToggleEnabled = Color3.fromRGB(0, 146, 214),
-			ToggleDisabled = Color3.fromRGB(150, 150, 150),
-			ToggleEnabledStroke = Color3.fromRGB(0, 170, 255),
-			ToggleDisabledStroke = Color3.fromRGB(170, 170, 170),
-			ToggleEnabledOuterStroke = Color3.fromRGB(100, 100, 100),
-			ToggleDisabledOuterStroke = Color3.fromRGB(180, 180, 180),
-
-			DropdownSelected = Color3.fromRGB(230, 230, 230),
-			DropdownUnselected = Color3.fromRGB(220, 220, 220),
-
-			InputBackground = Color3.fromRGB(240, 240, 240),
-			InputStroke = Color3.fromRGB(180, 180, 180),
-			PlaceholderColor = Color3.fromRGB(140, 140, 140)
-		},
-
-		Amethyst = {
-			TextColor = Color3.fromRGB(240, 240, 240),
-
-			Background = Color3.fromRGB(30, 20, 40),
-			Topbar = Color3.fromRGB(40, 25, 50),
-			Shadow = Color3.fromRGB(20, 15, 30),
-
-			NotificationBackground = Color3.fromRGB(35, 20, 40),
-			NotificationActionsBackground = Color3.fromRGB(240, 240, 250),
-
-			TabBackground = Color3.fromRGB(60, 40, 80),
-			TabStroke = Color3.fromRGB(70, 45, 90),
-			TabBackgroundSelected = Color3.fromRGB(180, 140, 200),
-			TabTextColor = Color3.fromRGB(230, 230, 240),
-			SelectedTabTextColor = Color3.fromRGB(50, 20, 50),
-
-			ElementBackground = Color3.fromRGB(45, 30, 60),
-			ElementBackgroundHover = Color3.fromRGB(50, 35, 70),
-			SecondaryElementBackground = Color3.fromRGB(40, 30, 55),
-			ElementStroke = Color3.fromRGB(70, 50, 85),
-			SecondaryElementStroke = Color3.fromRGB(65, 45, 80),
-
-			SliderBackground = Color3.fromRGB(100, 60, 150),
-			SliderProgress = Color3.fromRGB(130, 80, 180),
-			SliderStroke = Color3.fromRGB(150, 100, 200),
-
-			ToggleBackground = Color3.fromRGB(45, 30, 55),
-			ToggleEnabled = Color3.fromRGB(120, 60, 150),
-			ToggleDisabled = Color3.fromRGB(94, 47, 117),
-			ToggleEnabledStroke = Color3.fromRGB(140, 80, 170),
-			ToggleDisabledStroke = Color3.fromRGB(124, 71, 150),
-			ToggleEnabledOuterStroke = Color3.fromRGB(90, 40, 120),
-			ToggleDisabledOuterStroke = Color3.fromRGB(80, 50, 110),
-
-			DropdownSelected = Color3.fromRGB(50, 35, 70),
-			DropdownUnselected = Color3.fromRGB(35, 25, 50),
-
-			InputBackground = Color3.fromRGB(45, 30, 60),
-			InputStroke = Color3.fromRGB(80, 50, 110),
-			PlaceholderColor = Color3.fromRGB(178, 150, 200)
-		},
-
-		Green = {
-			TextColor = Color3.fromRGB(30, 60, 30),
-
-			Background = Color3.fromRGB(235, 245, 235),
-			Topbar = Color3.fromRGB(210, 230, 210),
-			Shadow = Color3.fromRGB(200, 220, 200),
-
-			NotificationBackground = Color3.fromRGB(240, 250, 240),
-			NotificationActionsBackground = Color3.fromRGB(220, 235, 220),
-
-			TabBackground = Color3.fromRGB(215, 235, 215),
-			TabStroke = Color3.fromRGB(190, 210, 190),
-			TabBackgroundSelected = Color3.fromRGB(245, 255, 245),
-			TabTextColor = Color3.fromRGB(50, 80, 50),
-			SelectedTabTextColor = Color3.fromRGB(20, 60, 20),
-
-			ElementBackground = Color3.fromRGB(225, 240, 225),
-			ElementBackgroundHover = Color3.fromRGB(210, 225, 210),
-			SecondaryElementBackground = Color3.fromRGB(235, 245, 235), 
-			ElementStroke = Color3.fromRGB(180, 200, 180),
-			SecondaryElementStroke = Color3.fromRGB(180, 200, 180),
-
-			SliderBackground = Color3.fromRGB(90, 160, 90),
-			SliderProgress = Color3.fromRGB(70, 130, 70),
-			SliderStroke = Color3.fromRGB(100, 180, 100),
-
-			ToggleBackground = Color3.fromRGB(215, 235, 215),
-			ToggleEnabled = Color3.fromRGB(60, 130, 60),
-			ToggleDisabled = Color3.fromRGB(150, 175, 150),
-			ToggleEnabledStroke = Color3.fromRGB(80, 150, 80),
-			ToggleDisabledStroke = Color3.fromRGB(130, 150, 130),
-			ToggleEnabledOuterStroke = Color3.fromRGB(100, 160, 100),
-			ToggleDisabledOuterStroke = Color3.fromRGB(160, 180, 160),
-
-			DropdownSelected = Color3.fromRGB(225, 240, 225),
-			DropdownUnselected = Color3.fromRGB(210, 225, 210),
-
-			InputBackground = Color3.fromRGB(235, 245, 235),
-			InputStroke = Color3.fromRGB(180, 200, 180),
-			PlaceholderColor = Color3.fromRGB(120, 140, 120)
-		},
-
-		Bloom = {
-			TextColor = Color3.fromRGB(60, 40, 50),
-
-			Background = Color3.fromRGB(255, 240, 245),
-			Topbar = Color3.fromRGB(250, 220, 225),
-			Shadow = Color3.fromRGB(230, 190, 195),
-
-			NotificationBackground = Color3.fromRGB(255, 235, 240),
-			NotificationActionsBackground = Color3.fromRGB(245, 215, 225),
-
-			TabBackground = Color3.fromRGB(240, 210, 220),
-			TabStroke = Color3.fromRGB(230, 200, 210),
-			TabBackgroundSelected = Color3.fromRGB(255, 225, 235),
-			TabTextColor = Color3.fromRGB(80, 40, 60),
-			SelectedTabTextColor = Color3.fromRGB(50, 30, 50),
-
-			ElementBackground = Color3.fromRGB(255, 235, 240),
-			ElementBackgroundHover = Color3.fromRGB(245, 220, 230),
-			SecondaryElementBackground = Color3.fromRGB(255, 235, 240), 
-			ElementStroke = Color3.fromRGB(230, 200, 210),
-			SecondaryElementStroke = Color3.fromRGB(230, 200, 210),
-
-			SliderBackground = Color3.fromRGB(240, 130, 160),
-			SliderProgress = Color3.fromRGB(250, 160, 180),
-			SliderStroke = Color3.fromRGB(255, 180, 200),
-
-			ToggleBackground = Color3.fromRGB(240, 210, 220),
-			ToggleEnabled = Color3.fromRGB(255, 140, 170),
-			ToggleDisabled = Color3.fromRGB(200, 180, 185),
-			ToggleEnabledStroke = Color3.fromRGB(250, 160, 190),
-			ToggleDisabledStroke = Color3.fromRGB(210, 180, 190),
-			ToggleEnabledOuterStroke = Color3.fromRGB(220, 160, 180),
-			ToggleDisabledOuterStroke = Color3.fromRGB(190, 170, 180),
-
-			DropdownSelected = Color3.fromRGB(250, 220, 225),
-			DropdownUnselected = Color3.fromRGB(240, 210, 220),
-
-			InputBackground = Color3.fromRGB(255, 235, 240),
-			InputStroke = Color3.fromRGB(220, 190, 200),
-			PlaceholderColor = Color3.fromRGB(170, 130, 140)
-		},
-
-		DarkBlue = {
-			TextColor = Color3.fromRGB(230, 230, 230),
-
-			Background = Color3.fromRGB(20, 25, 30),
-			Topbar = Color3.fromRGB(30, 35, 40),
-			Shadow = Color3.fromRGB(15, 20, 25),
-
-			NotificationBackground = Color3.fromRGB(25, 30, 35),
-			NotificationActionsBackground = Color3.fromRGB(45, 50, 55),
-
-			TabBackground = Color3.fromRGB(35, 40, 45),
-			TabStroke = Color3.fromRGB(45, 50, 60),
-			TabBackgroundSelected = Color3.fromRGB(40, 70, 100),
-			TabTextColor = Color3.fromRGB(200, 200, 200),
+		BlackSquare = {
+			-- COR PRETA PURA
+			TextColor = Color3.fromRGB(255, 255, 255),
+			Background = Color3.fromRGB(0, 0, 0),
+			Topbar = Color3.fromRGB(0, 0, 0),
+			Shadow = Color3.fromRGB(0, 0, 0),
+			NotificationBackground = Color3.fromRGB(0, 0, 0),
+			NotificationActionsBackground = Color3.fromRGB(50, 50, 50),
+			TabBackground = Color3.fromRGB(15, 15, 15),
+			TabStroke = Color3.fromRGB(30, 30, 30),
+			TabBackgroundSelected = Color3.fromRGB(40, 40, 40),
+			TabTextColor = Color3.fromRGB(180, 180, 180),
 			SelectedTabTextColor = Color3.fromRGB(255, 255, 255),
-
-			ElementBackground = Color3.fromRGB(30, 35, 40),
-			ElementBackgroundHover = Color3.fromRGB(40, 45, 50),
-			SecondaryElementBackground = Color3.fromRGB(35, 40, 45), 
-			ElementStroke = Color3.fromRGB(45, 50, 60),
-			SecondaryElementStroke = Color3.fromRGB(40, 45, 55),
-
-			SliderBackground = Color3.fromRGB(0, 90, 180),
-			SliderProgress = Color3.fromRGB(0, 120, 210),
-			SliderStroke = Color3.fromRGB(0, 150, 240),
-
-			ToggleBackground = Color3.fromRGB(35, 40, 45),
-			ToggleEnabled = Color3.fromRGB(0, 120, 210),
-			ToggleDisabled = Color3.fromRGB(70, 70, 80),
-			ToggleEnabledStroke = Color3.fromRGB(0, 150, 240),
-			ToggleDisabledStroke = Color3.fromRGB(75, 75, 85),
-			ToggleEnabledOuterStroke = Color3.fromRGB(20, 100, 180), 
-			ToggleDisabledOuterStroke = Color3.fromRGB(55, 55, 65),
-
-			DropdownSelected = Color3.fromRGB(30, 70, 90),
-			DropdownUnselected = Color3.fromRGB(25, 30, 35),
-
-			InputBackground = Color3.fromRGB(25, 30, 35),
-			InputStroke = Color3.fromRGB(45, 50, 60), 
-			PlaceholderColor = Color3.fromRGB(150, 150, 160)
-		},
-
-		Serenity = {
-			TextColor = Color3.fromRGB(50, 55, 60),
-			Background = Color3.fromRGB(240, 245, 250),
-			Topbar = Color3.fromRGB(215, 225, 235),
-			Shadow = Color3.fromRGB(200, 210, 220),
-
-			NotificationBackground = Color3.fromRGB(210, 220, 230),
-			NotificationActionsBackground = Color3.fromRGB(225, 230, 240),
-
-			TabBackground = Color3.fromRGB(200, 210, 220),
-			TabStroke = Color3.fromRGB(180, 190, 200),
-			TabBackgroundSelected = Color3.fromRGB(175, 185, 200),
-			TabTextColor = Color3.fromRGB(50, 55, 60),
-			SelectedTabTextColor = Color3.fromRGB(30, 35, 40),
-
-			ElementBackground = Color3.fromRGB(210, 220, 230),
-			ElementBackgroundHover = Color3.fromRGB(220, 230, 240),
-			SecondaryElementBackground = Color3.fromRGB(200, 210, 220),
-			ElementStroke = Color3.fromRGB(190, 200, 210),
-			SecondaryElementStroke = Color3.fromRGB(180, 190, 200),
-
-			SliderBackground = Color3.fromRGB(200, 220, 235),  -- Lighter shade
-			SliderProgress = Color3.fromRGB(70, 130, 180),
-			SliderStroke = Color3.fromRGB(150, 180, 220),
-
-			ToggleBackground = Color3.fromRGB(210, 220, 230),
-			ToggleEnabled = Color3.fromRGB(70, 160, 210),
-			ToggleDisabled = Color3.fromRGB(180, 180, 180),
-			ToggleEnabledStroke = Color3.fromRGB(60, 150, 200),
-			ToggleDisabledStroke = Color3.fromRGB(140, 140, 140),
-			ToggleEnabledOuterStroke = Color3.fromRGB(100, 120, 140),
-			ToggleDisabledOuterStroke = Color3.fromRGB(120, 120, 130),
-
-			DropdownSelected = Color3.fromRGB(220, 230, 240),
-			DropdownUnselected = Color3.fromRGB(200, 210, 220),
-
-			InputBackground = Color3.fromRGB(220, 230, 240),
-			InputStroke = Color3.fromRGB(180, 190, 200),
-			PlaceholderColor = Color3.fromRGB(150, 150, 150)
-		},
+			ElementBackground = Color3.fromRGB(10, 10, 10),
+			ElementBackgroundHover = Color3.fromRGB(20, 20, 20),
+			SecondaryElementBackground = Color3.fromRGB(8, 8, 8),
+			ElementStroke = Color3.fromRGB(35, 35, 35),
+			SecondaryElementStroke = Color3.fromRGB(25, 25, 25),
+			SliderBackground = Color3.fromRGB(30, 30, 30),
+			SliderProgress = Color3.fromRGB(255, 255, 255),
+			SliderStroke = Color3.fromRGB(50, 50, 50),
+			ToggleBackground = Color3.fromRGB(15, 15, 15),
+			ToggleEnabled = Color3.fromRGB(255, 255, 255),
+			ToggleDisabled = Color3.fromRGB(60, 60, 60),
+			ToggleEnabledStroke = Color3.fromRGB(100, 100, 100),
+			ToggleDisabledStroke = Color3.fromRGB(50, 50, 50),
+			ToggleEnabledOuterStroke = Color3.fromRGB(80, 80, 80),
+			ToggleDisabledOuterStroke = Color3.fromRGB(40, 40, 40),
+			DropdownSelected = Color3.fromRGB(25, 25, 25),
+			DropdownUnselected = Color3.fromRGB(15, 15, 15),
+			InputBackground = Color3.fromRGB(10, 10, 10),
+			InputStroke = Color3.fromRGB(40, 40, 40),
+			PlaceholderColor = Color3.fromRGB(100, 100, 100)
+		}
 	}
 }
 
-
-
-
 -- Interface Management
-
 local AxisAssetId = customAssetId or 10804731440
 local Axis = useStudio and script.Parent:FindFirstChild('Axis') or game:GetObjects("rbxassetid://"..AxisAssetId)[1]
 local buildAttempts = 0
 local correctBuild = false
 local warned
 local globalLoaded
-local axisDestroyed = false -- True when AxisLibrary:Destroy() is called
+local axisDestroyed = false
 
 repeat
 	if Axis:FindFirstChild('Build') and Axis.Build.Value == InterfaceBuild then
@@ -833,7 +452,6 @@ do
 		secureNotify("no_getcustomasset", "Axis", "Your executor does not support getcustomasset. Some UI images may not render correctly.")
 	end
 
-
 	Axis.Main.Shadow.Image.Image = customAssets[tostring(5587865193)]
 	Axis.Main.Topbar.Hide.Image = customAssets[tostring(10137832201)]
 	Axis.Main.Topbar.ChangeSize.Image = customAssets[tostring(10137941941)]
@@ -857,8 +475,7 @@ do
 	Axis.Notifications.Template.Icon.Image = customAssets[tostring(77891951053543)]
 	Axis.Notifications.Template.Shadow.Image = customAssets[tostring(3523728077)]
 	Axis.Loading.Banner.Image = customAssets[tostring(111263549366178)]
-
-end -- custom asset block
+end
 
 local minSize = Vector2.new(1024, 768)
 local useMobileSizing
@@ -872,9 +489,7 @@ if UserInputService.TouchEnabled then
 	useMobilePrompt = true
 end
 
-
 -- Object Variables
-
 local Main = Axis.Main
 local MPrompt = Axis:FindFirstChild('Prompt')
 local Topbar = Main.Topbar
@@ -891,9 +506,7 @@ local dragOffsetMobile = 150
 Axis.DisplayOrder = 100
 LoadingFrame.Version.Text = Release
 
--- Thanks to Latte Softworks for the Lucide integration for Roblox
 local Icons = useStudio and require(script.Parent.icons) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Axis/refs/heads/main/icons.lua')
--- Variables
 
 local CFileName = nil
 local CEnabled = false
@@ -902,9 +515,21 @@ local Hidden = false
 local Debounce = false
 local searchOpen = false
 local Notifications = Axis.Notifications
-local keybindConnections = {} -- For storing keybind connections to disconnect when Axis is destroyed
+local keybindConnections = {}
 
-local SelectedTheme = AxisLibrary.Theme.Default
+local SelectedTheme = AxisLibrary.Theme.BlackSquare
+
+-- REMOVER BORDAS ARREDONDADAS (DEIXAR QUADRADO)
+Axis.Main.BackgroundTransparency = 0
+Axis.Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Axis.Main.ClipsDescendants = true
+
+-- Forçar bordas retas/quadradas
+for _, uiCorner in ipairs(Axis:GetDescendants()) do
+	if uiCorner:IsA("UICorner") then
+		uiCorner:Destroy()
+	end
+end
 
 local function ChangeTheme(Theme)
 	if typeof(Theme) == 'string' then
@@ -952,7 +577,7 @@ local function ChangeTheme(Theme)
 	end
 end
 
-local function getIcon(name : string): {id: number, imageRectSize: Vector2, imageRectOffset: Vector2}
+local function getIcon(name: string): {id: number, imageRectSize: Vector2, imageRectOffset: Vector2}
 	if not Icons then
 		warn("Lucide Icons: Cannot use icons as icons library is not loaded")
 		return
@@ -982,6 +607,7 @@ local function getIcon(name : string): {id: number, imageRectSize: Vector2, imag
 
 	return asset
 end
+
 local function getAssetUri(id: any): string
 	local assetUri = ""
 	if type(id) == "number" then
@@ -1096,7 +722,6 @@ local function makeDraggable(object, dragObject, enableTaptic, tapticOffset)
 	end)
 end
 
-
 local function PackColor(Color)
 	return {R = Color.R * 255, G = Color.G * 255, B = Color.B * 255}
 end    
@@ -1111,7 +736,6 @@ local function LoadConfiguration(Configuration)
 
 	if not success then warn('Axis had an issue decoding the configuration file, please try delete the file and reopen Axis.') return end
 
-	-- Iterate through current UI elements' flags
 	for FlagName, Flag in pairs(AxisLibrary.Flags) do
 		local FlagValue = Data[FlagName]
 
@@ -1130,7 +754,6 @@ local function LoadConfiguration(Configuration)
 		else
 			warn("Axis | Unable to find '"..FlagName.. "' in the save file.")
 			print("The error above may not be an issue if new elements have been added or not been set values.")
-			--AxisLibrary:Notify({Title = "Axis Flags", Content = "Axis was unable to find '"..FlagName.. "' in the save file. Check sirius.menu/discord for help.", Image = 3944688398})
 		end
 	end
 
@@ -1181,21 +804,17 @@ local function SaveConfiguration()
 		warn(HttpService:JSONEncode(Data))
 	end
 
-
 	callSafely(writefile, ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension, tostring(HttpService:JSONEncode(Data)))
 end
 
-function AxisLibrary:Notify(data) -- action e.g open messages
+function AxisLibrary:Notify(data)
 	task.spawn(function()
-
-		-- Notification Object Creation
 		local newNotification = Notifications.Template:Clone()
 		newNotification.Name = data.Title or 'No Title Provided'
 		newNotification.Parent = Notifications
 		newNotification.LayoutOrder = #Notifications:GetChildren()
 		newNotification.Visible = false
 
-		-- Set Data
 		newNotification.Title.Text = data.Title or "Unknown Title"
 		newNotification.Description.Text = data.Content or "Unknown Content"
 
@@ -1207,8 +826,6 @@ function AxisLibrary:Notify(data) -- action e.g open messages
 		else
 			newNotification.Icon.Image = ""
 		end
-
-		-- Set initial transparency values
 
 		newNotification.Title.TextColor3 = SelectedTheme.TextColor
 		newNotification.Description.TextColor3 = SelectedTheme.TextColor
@@ -1234,7 +851,6 @@ function AxisLibrary:Notify(data) -- action e.g open messages
 			print("Notification Actions are being sunset for now, keep up to date on when they're back in the discord. (sirius.menu/discord)")
 		end
 
-		-- Calculate textbounds and set initial values
 		local bounds = {newNotification.Title.TextBounds.Y, newNotification.Description.TextBounds.Y}
 		newNotification.Size = UDim2.new(1, -60, 0, -Notifications:FindFirstChild("UIListLayout").Padding.Offset)
 
@@ -1248,7 +864,6 @@ function AxisLibrary:Notify(data) -- action e.g open messages
 		TweenService:Create(newNotification.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
 
 		task.wait(0.05)
-
 		TweenService:Create(newNotification.Icon, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {ImageTransparency = 0}):Play()
 
 		task.wait(0.05)
@@ -1269,7 +884,6 @@ function AxisLibrary:Notify(data) -- action e.g open messages
 		TweenService:Create(newNotification, TweenInfo.new(1, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, -90, 0, 0)}):Play()
 
 		task.wait(1)
-
 		TweenService:Create(newNotification, TweenInfo.new(1, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, -90, 0, -Notifications:FindFirstChild("UIListLayout").Padding.Offset)}):Play()
 
 		newNotification.Visible = false
@@ -1289,7 +903,6 @@ local function openSearch()
 	Main.Search.Position = UDim2.new(0.5, 0, 0, 70)
 
 	Main.Search.Input.Interactable = true
-
 	Main.Search.Visible = true
 
 	for _, tabbtn in ipairs(TabList:GetChildren()) do
@@ -1341,7 +954,6 @@ local function closeSearch()
 	Main.Search.Input.Interactable = false
 end
 
--- Sets element visibility across all tab pages (used by Hide, Unhide, Maximise, Minimise)
 local function setElementsVisible(show)
 	for _, tab in ipairs(Elements:GetChildren()) do
 		if tab.Name ~= "Template" and tab.ClassName == "ScrollingFrame" and tab.Name ~= "Placeholder" then
@@ -1369,7 +981,6 @@ local function setElementsVisible(show)
 	end
 end
 
--- Sets tab button visibility (used by Hide, Unhide, Maximise, Minimise)
 local function setTabButtonsVisible(show)
 	for _, tabbtn in ipairs(TabList:GetChildren()) do
 		if tabbtn.ClassName == "Frame" and tabbtn.Name ~= "Placeholder" then
@@ -1406,8 +1017,8 @@ local function Hide(notify: boolean?)
 	end
 
 	task.spawn(closeSearch)
-
 	Debounce = true
+
 	if notify then
 		if useMobilePrompt then 
 			AxisLibrary:Notify({Title = "Interface Hidden", Content = "The interface has been hidden, you can unhide the interface by tapping 'Show'.", Duration = 7, Image = 4400697855})
@@ -1466,17 +1077,12 @@ local function Maximise()
 	task.wait(0.2)
 
 	Elements.Visible = true
-
 	setElementsVisible(true)
-
 	task.wait(0.1)
-
 	setTabButtonsVisible(true)
-
 	task.wait(0.5)
 	Debounce = false
 end
-
 
 local function Unhide()
 	Debounce = true
@@ -1506,7 +1112,6 @@ local function Unhide()
 	end
 
 	dragBar.Position = useMobileSizing and UDim2.new(0.5, 0, 0.5, dragOffsetMobile) or UDim2.new(0.5, 0, 0.5, dragOffset)
-
 	dragInteract.Visible = true
 
 	for _, TopbarButton in ipairs(Topbar:GetChildren()) do
@@ -1516,14 +1121,11 @@ local function Unhide()
 			else
 				TweenService:Create(TopbarButton, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.8}):Play()
 			end
-
 		end
 	end
 
 	setTabButtonsVisible(true)
-
 	setElementsVisible(true)
-
 	TweenService:Create(dragBarCosmetic, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 0.5}):Play()
 
 	task.wait(0.5)
@@ -1534,13 +1136,10 @@ end
 local function Minimise()
 	Debounce = true
 	Topbar.ChangeSize.Image = customAssets[tostring(11036884234)]
-
 	Topbar.UIStroke.Color = SelectedTheme.ElementStroke
 
 	task.spawn(closeSearch)
-
 	setTabButtonsVisible(false)
-
 	setElementsVisible(false)
 
 	TweenService:Create(dragBarCosmetic, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
@@ -1552,15 +1151,13 @@ local function Minimise()
 	TweenService:Create(Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 495, 0, 45)}):Play()
 
 	task.wait(0.3)
-
 	Elements.Visible = false
 	TabList.Visible = false
-
 	task.wait(0.2)
 	Debounce = false
 end
 
-local function saveSettings() -- Save settings to config file
+local function saveSettings()
 	local encoded
 	local success, err = pcall(function()
 		encoded = HttpService:JSONEncode(settingsTable)
@@ -1581,7 +1178,7 @@ local function updateSetting(category: string, setting: string, value: any)
 		return
 	end
 	settingsTable[category][setting].Value = value
-	overriddenSettings[category .. "." .. setting] = nil -- If user changes an overriden setting, remove the override
+	overriddenSettings[category .. "." .. setting] = nil
 	saveSettings()
 end
 
@@ -1603,7 +1200,6 @@ local function createSettings(window)
 		Elements['Axis Settings'].LayoutOrder = 1000
 	end
 
-	-- Create sections and elements
 	for categoryName, settingCategory in pairs(settingsTable) do
 		newTab:CreateSection(categoryName)
 
@@ -1668,7 +1264,6 @@ function AxisLibrary:CreateWindow(Settings)
 		if getgenv and not getgenv().axisCached then
 			Axis.Enabled = true
 			Axis.Loading.Visible = true
-
 			task.wait(1.4)
 			Axis.Loading.Visible = false
 		end
@@ -1677,13 +1272,12 @@ function AxisLibrary:CreateWindow(Settings)
 	if getgenv then getgenv().axisCached = true end
 
 	if not correctBuild and not Settings.DisableBuildWarnings then
-		task.delay(3, 
-			function() 
-				AxisLibrary:Notify({Title = 'Build Mismatch', Content = 'Axis may encounter issues as you are running an incompatible interface version ('.. ((Axis:FindFirstChild('Build') and Axis.Build.Value) or 'No Build') ..').\n\nThis version of Axis is intended for interface build '..InterfaceBuild..'.\n\nTry rejoining and then run the script twice.', Image = 4335487866, Duration = 15})		
-			end)
+		task.delay(3, function() 
+			AxisLibrary:Notify({Title = 'Build Mismatch', Content = 'Axis may encounter issues as you are running an incompatible interface version ('.. ((Axis:FindFirstChild('Build') and Axis.Build.Value) or 'No Build') ..').\n\nThis version of Axis is intended for interface build '..InterfaceBuild..'.\n\nTry rejoining and then run the script twice.', Image = 4335487866, Duration = 15})		
+		end)
 	end
 
-	if Settings.ToggleUIKeybind then -- Can either be a string or an Enum.KeyCode
+	if Settings.ToggleUIKeybind then
 		local keybind = Settings.ToggleUIKeybind
 		if type(keybind) == "string" then
 			keybind = string.upper(keybind)
@@ -1795,7 +1389,6 @@ function AxisLibrary:CreateWindow(Settings)
 		end
 	end)
 
-
 	makeDraggable(Main, Topbar, false, {dragOffset, dragOffsetMobile})
 	if dragBar then dragBar.Position = useMobileSizing and UDim2.new(0.5, 0, 0.5, dragOffsetMobile) or UDim2.new(0.5, 0, 0.5, dragOffset) makeDraggable(Main, dragInteract, true, {dragOffset, dragOffsetMobile}) end
 
@@ -1830,7 +1423,7 @@ function AxisLibrary:CreateWindow(Settings)
 				end)
 			end
 
-			if Settings.Discord.RememberJoins then -- We do logic this way so if the developer changes this setting, the user still won't be prompted, only new users
+			if Settings.Discord.RememberJoins then
 				callSafely(writefile, AxisFolder.."/Discord Invites".."/"..Settings.Discord.Invite..ConfigurationExtension,"Axis RememberJoins is true for this invite, this invite will not ask you to join again")
 			end
 		end
@@ -1947,13 +1540,11 @@ function AxisLibrary:CreateWindow(Settings)
 			task.wait(0.15)
 			TweenService:Create(KeyMain.Hide, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {ImageTransparency = 0.3}):Play()
 
-
 			KeyUI.Main.Input.InputBox.FocusLost:Connect(function()
 				if #KeyUI.Main.Input.InputBox.Text == 0 then return end
 				local KeyFound = false
 				local FoundKey = ''
 				for _, MKey in ipairs(Settings.KeySettings.Key) do
-					-- stricter key check
 					if KeyMain.Input.InputBox.Text == MKey then
 						KeyFound = true
 						FoundKey = MKey
@@ -2017,12 +1608,42 @@ function AxisLibrary:CreateWindow(Settings)
 	task.wait(0.05)
 	TweenService:Create(LoadingFrame.Version, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
 
-
 	Elements.Template.LayoutOrder = 100000
 	Elements.Template.Visible = false
 
 	Elements.UIPageLayout.FillDirection = Enum.FillDirection.Horizontal
 	TabList.Template.Visible = false
+
+	-- MODIFICAÇÃO: TABS NA LATERAL DIREITA
+	-- Inverter a ordem dos filhos do TabList para que a primeira tab fique no final (direita)
+	local function reorderTabsToRight()
+		local children = {}
+		for _, child in ipairs(TabList:GetChildren()) do
+			if child.ClassName == "Frame" and child.Name ~= "Placeholder" and child.Name ~= "Template" then
+				table.insert(children, child)
+			end
+		end
+		-- Ordenar por LayoutOrder (padrão)
+		table.sort(children, function(a, b)
+			return (a.LayoutOrder or 0) < (b.LayoutOrder or 0)
+		end)
+		-- Reposicionar cada tab para ficar alinhada à direita
+		for i, child in ipairs(children) do
+			-- Alinhar à direita
+			child.AnchorPoint = Vector2.new(1, 0.5)
+			child.Position = UDim2.new(1, -10, 0.5, (i - 1) * 35)
+		end
+	end
+
+	-- Aguardar um pouco e depois reposicionar as tabs
+	task.spawn(function()
+		task.wait(1)
+		reorderTabsToRight()
+	end)
+
+	-- Também modificar o layout do TabList para usar anchor point right
+	TabList.AnchorPoint = Vector2.new(1, 0.5)
+	TabList.Position = UDim2.new(1, -10, 0.5, 0)
 
 	-- Tab
 	local FirstTab = false
@@ -2049,20 +1670,19 @@ function AxisLibrary:CreateWindow(Settings)
 			TabButton.Size = UDim2.new(0, TabButton.Title.TextBounds.X + 52, 0, 30)
 		end
 
-
-
 		TabButton.BackgroundTransparency = 1
 		TabButton.Title.TextTransparency = 1
 		TabButton.Image.ImageTransparency = 1
 		TabButton.UIStroke.Transparency = 1
-
 		TabButton.Visible = not Ext or false
+		
+		-- Alinhar à direita
+		TabButton.AnchorPoint = Vector2.new(1, 0.5)
 
 		-- Create Elements Page
 		local TabPage = Elements.Template:Clone()
 		TabPage.Name = Name
 		TabPage.Visible = true
-
 		TabPage.LayoutOrder = #Elements:GetChildren() or Ext and 10000
 
 		for _, TemplateElement in ipairs(TabPage:GetChildren()) do
@@ -2090,7 +1710,6 @@ function AxisLibrary:CreateWindow(Settings)
 			TabButton.Title.TextColor3 = SelectedTheme.TabTextColor
 		end
 
-
 		-- Animate
 		task.wait(0.1)
 		if FirstTab or Ext then
@@ -2111,6 +1730,21 @@ function AxisLibrary:CreateWindow(Settings)
 			TweenService:Create(TabButton.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
 		end
 
+		-- Reposicionar tabs quando uma nova é adicionada
+		task.spawn(function()
+			local children = {}
+			for _, child in ipairs(TabList:GetChildren()) do
+				if child.ClassName == "Frame" and child.Name ~= "Placeholder" and child.Name ~= "Template" then
+					table.insert(children, child)
+				end
+			end
+			table.sort(children, function(a, b)
+				return (a.LayoutOrder or 0) < (b.LayoutOrder or 0)
+			end)
+			for i, child in ipairs(children) do
+				child.Position = UDim2.new(1, -10, 0.5, (i - 1) * 35)
+			end
+		end)
 
 		TabButton.Interact.MouseButton1Click:Connect(function()
 			if Minimised then return end
@@ -2141,7 +1775,7 @@ function AxisLibrary:CreateWindow(Settings)
 
 		local Tab = {}
 
-		-- Button
+		-- Button com borda personalizável
 		function Tab:CreateButton(ButtonSettings)
 			local ButtonValue = {}
 
@@ -2151,6 +1785,13 @@ function AxisLibrary:CreateWindow(Settings)
 			Button.Visible = true
 			Button.Parent = TabPage
 
+			-- Permitir personalização da cor da borda
+			if ButtonSettings.BorderColor then
+				Button.UIStroke.Color = ButtonSettings.BorderColor
+			else
+				Button.UIStroke.Color = SelectedTheme.ElementStroke
+			end
+			
 			Button.BackgroundTransparency = 1
 			Button.UIStroke.Transparency = 1
 			Button.Title.TextTransparency = 1
@@ -2159,10 +1800,8 @@ function AxisLibrary:CreateWindow(Settings)
 			TweenService:Create(Button.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 			TweenService:Create(Button.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()	
 
-
 			Button.Interact.MouseButton1Click:Connect(function()
 				local Success, Response = pcall(ButtonSettings.Callback)
-				-- Prevents animation from trying to play if the button's callback called AxisLibrary:Destroy()
 				if axisDestroyed then
 					return
 				end
@@ -2202,6 +1841,11 @@ function AxisLibrary:CreateWindow(Settings)
 				TweenService:Create(Button.ElementIndicator, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {TextTransparency = 0.9}):Play()
 			end)
 
+			-- Função para mudar a cor da borda do botão
+			function ButtonValue:SetBorderColor(color)
+				Button.UIStroke.Color = color
+			end
+
 			function ButtonValue:Set(NewButton)
 				Button.Title.Text = NewButton
 				Button.Name = NewButton
@@ -2210,8 +1854,8 @@ function AxisLibrary:CreateWindow(Settings)
 			return ButtonValue
 		end
 
-		-- ColorPicker
-		function Tab:CreateColorPicker(ColorPickerSettings) -- by Throit
+		-- ColorPicker (mantido original)
+		function Tab:CreateColorPicker(ColorPickerSettings)
 			ColorPickerSettings.Type = "ColorPicker"
 			local ColorPicker = Elements.Template.ColorPicker:Clone()
 			local Background = ColorPicker.CPBackground
@@ -2284,7 +1928,6 @@ function AxisLibrary:CreateWindow(Settings)
 					TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
 					TweenService:Create(Background, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
 				end
-
 			end)
 
 			local colorPickerInputConnection = UserInputService.InputEnded:Connect(function(input, gameProcessed) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -2312,12 +1955,10 @@ function AxisLibrary:CreateWindow(Settings)
 			local hex = string.format("#%02X%02X%02X",color.R*0xFF,color.G*0xFF,color.B*0xFF)
 			ColorPicker.HexInput.InputBox.Text = hex
 			local function setDisplay()
-				--Main
 				Main.MainPoint.Position = UDim2.new(s,-Main.MainPoint.AbsoluteSize.X/2,1-v,-Main.MainPoint.AbsoluteSize.Y/2)
 				Main.MainPoint.ImageColor3 = Color3.fromHSV(h,s,v)
 				Background.BackgroundColor3 = Color3.fromHSV(h,1,1)
 				Display.BackgroundColor3 = Color3.fromHSV(h,s,v)
-				--Slider 
 				local x = h * Slider.AbsoluteSize.X
 				Slider.SliderPoint.Position = UDim2.new(0,x-Slider.SliderPoint.AbsoluteSize.X/2,0.5,0)
 				Slider.SliderPoint.ImageColor3 = Color3.fromHSV(h,1,1)
@@ -2349,7 +1990,6 @@ function AxisLibrary:CreateWindow(Settings)
 					SaveConfiguration()
 				end
 			end)
-			--RGB
 			local function rgbBoxes(box,toChange)
 				local value = tonumber(box.Text) 
 				local color = Color3.fromHSV(h,s,v) 
@@ -2359,7 +1999,6 @@ function AxisLibrary:CreateWindow(Settings)
 				if value then 
 					value = math.clamp(value,0,255)
 					h,s,v = Color3.fromRGB(oldR,oldG,oldB):ToHSV()
-
 					setDisplay()
 				else 
 					box.Text = tostring(save)
@@ -2474,7 +2113,6 @@ function AxisLibrary:CreateWindow(Settings)
 
 		-- Section
 		function Tab:CreateSection(SectionName)
-
 			local SectionValue = {}
 
 			if SDone then
@@ -2496,7 +2134,6 @@ function AxisLibrary:CreateWindow(Settings)
 			end
 
 			SDone = true
-
 			return SectionValue
 		end
 
@@ -2518,8 +2155,8 @@ function AxisLibrary:CreateWindow(Settings)
 			return DividerValue
 		end
 
-		-- Label
-		function Tab:CreateLabel(LabelText : string, Icon: number, Color : Color3, IgnoreTheme : boolean)
+		-- Label com borda personalizável
+		function Tab:CreateLabel(LabelText : string, Icon: number, Color : Color3, IgnoreTheme : boolean, BorderColor)
 			local LabelValue = {}
 
 			local Label = Elements.Template.Label:Clone()
@@ -2528,7 +2165,7 @@ function AxisLibrary:CreateWindow(Settings)
 			Label.Parent = TabPage
 
 			Label.BackgroundColor3 = Color or SelectedTheme.SecondaryElementBackground
-			Label.UIStroke.Color = Color or SelectedTheme.SecondaryElementStroke
+			Label.UIStroke.Color = BorderColor or (Color or SelectedTheme.SecondaryElementStroke)
 
 			if Icon then
 				local img, rectOffset, rectSize = resolveIcon(Icon)
@@ -2576,9 +2213,16 @@ function AxisLibrary:CreateWindow(Settings)
 				end
 			end
 
+			-- Função para mudar a cor da borda do label
+			function LabelValue:SetBorderColor(color)
+				Label.UIStroke.Color = color
+			end
+
 			Axis.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
 				Label.BackgroundColor3 = IgnoreTheme and (Color or Label.BackgroundColor3) or SelectedTheme.SecondaryElementBackground
-				Label.UIStroke.Color = IgnoreTheme and (Color or Label.BackgroundColor3) or SelectedTheme.SecondaryElementStroke
+				if not BorderColor then
+					Label.UIStroke.Color = IgnoreTheme and (Color or Label.BackgroundColor3) or SelectedTheme.SecondaryElementStroke
+				end
 			end)
 
 			return LabelValue
@@ -2594,13 +2238,17 @@ function AxisLibrary:CreateWindow(Settings)
 			Paragraph.Visible = true
 			Paragraph.Parent = TabPage
 
+			if ParagraphSettings.BorderColor then
+				Paragraph.UIStroke.Color = ParagraphSettings.BorderColor
+			else
+				Paragraph.UIStroke.Color = SelectedTheme.SecondaryElementStroke
+			end
+
 			Paragraph.BackgroundTransparency = 1
 			Paragraph.UIStroke.Transparency = 1
 			Paragraph.Title.TextTransparency = 1
 			Paragraph.Content.TextTransparency = 1
-
 			Paragraph.BackgroundColor3 = SelectedTheme.SecondaryElementBackground
-			Paragraph.UIStroke.Color = SelectedTheme.SecondaryElementStroke
 
 			TweenService:Create(Paragraph, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
 			TweenService:Create(Paragraph.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
@@ -2612,15 +2260,21 @@ function AxisLibrary:CreateWindow(Settings)
 				Paragraph.Content.Text = NewParagraphSettings.Content
 			end
 
+			function ParagraphValue:SetBorderColor(color)
+				Paragraph.UIStroke.Color = color
+			end
+
 			Axis.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
 				Paragraph.BackgroundColor3 = SelectedTheme.SecondaryElementBackground
-				Paragraph.UIStroke.Color = SelectedTheme.SecondaryElementStroke
+				if not ParagraphSettings.BorderColor then
+					Paragraph.UIStroke.Color = SelectedTheme.SecondaryElementStroke
+				end
 			end)
 
 			return ParagraphValue
 		end
 
-		-- Input
+		-- Input com borda personalizável
 		function Tab:CreateInput(InputSettings)
 			local Input = Elements.Template.Input:Clone()
 			Input.Name = InputSettings.Name
@@ -2628,10 +2282,15 @@ function AxisLibrary:CreateWindow(Settings)
 			Input.Visible = true
 			Input.Parent = TabPage
 
+			if InputSettings.BorderColor then
+				Input.UIStroke.Color = InputSettings.BorderColor
+			else
+				Input.UIStroke.Color = SelectedTheme.ElementStroke
+			end
+
 			Input.BackgroundTransparency = 1
 			Input.UIStroke.Transparency = 1
 			Input.Title.TextTransparency = 1
-
 			Input.InputFrame.InputBox.Text = InputSettings.CurrentValue or ''
 
 			Input.InputFrame.BackgroundColor3 = SelectedTheme.InputBackground
@@ -2696,6 +2355,10 @@ function AxisLibrary:CreateWindow(Settings)
 				end
 			end
 
+			function InputSettings:SetBorderColor(color)
+				Input.UIStroke.Color = color
+			end
+
 			if Settings.ConfigurationSaving then
 				if Settings.ConfigurationSaving.Enabled and InputSettings.Flag then
 					AxisLibrary.Flags[InputSettings.Flag] = InputSettings
@@ -2705,12 +2368,15 @@ function AxisLibrary:CreateWindow(Settings)
 			Axis.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
 				Input.InputFrame.BackgroundColor3 = SelectedTheme.InputBackground
 				Input.InputFrame.UIStroke.Color = SelectedTheme.InputStroke
+				if not InputSettings.BorderColor then
+					Input.UIStroke.Color = SelectedTheme.ElementStroke
+				end
 			end)
 
 			return InputSettings
 		end
 
-		-- Dropdown
+		-- Dropdown com borda personalizável
 		function Tab:CreateDropdown(DropdownSettings)
 			local Dropdown = Elements.Template.Dropdown:Clone()
 			if string.find(DropdownSettings.Name,"closed") then
@@ -2721,6 +2387,12 @@ function AxisLibrary:CreateWindow(Settings)
 			Dropdown.Title.Text = DropdownSettings.Name
 			Dropdown.Visible = true
 			Dropdown.Parent = TabPage
+
+			if DropdownSettings.BorderColor then
+				Dropdown.UIStroke.Color = DropdownSettings.BorderColor
+			else
+				Dropdown.UIStroke.Color = SelectedTheme.ElementStroke
+			end
 
 			Dropdown.List.Visible = false
 			if DropdownSettings.CurrentOption then
@@ -2757,7 +2429,6 @@ function AxisLibrary:CreateWindow(Settings)
 			Dropdown.BackgroundTransparency = 1
 			Dropdown.UIStroke.Transparency = 1
 			Dropdown.Title.TextTransparency = 1
-
 			Dropdown.Size = UDim2.new(1, -10, 0, 45)
 
 			TweenService:Create(Dropdown, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
@@ -2829,6 +2500,12 @@ function AxisLibrary:CreateWindow(Settings)
 					DropdownOption.Parent = Dropdown.List
 					DropdownOption.Visible = true
 
+					if DropdownSettings.OptionBorderColor then
+						DropdownOption.UIStroke.Color = DropdownSettings.OptionBorderColor
+					else
+						DropdownOption.UIStroke.Color = SelectedTheme.ElementStroke
+					end
+
 					DropdownOption.BackgroundTransparency = 1
 					DropdownOption.UIStroke.Transparency = 1
 					DropdownOption.Title.TextTransparency = 1
@@ -2873,7 +2550,6 @@ function AxisLibrary:CreateWindow(Settings)
 							Debounce = true
 						end
 
-
 						local Success, Response = pcall(function()
 							DropdownSettings.Callback(DropdownSettings.CurrentOption)
 						end)
@@ -2917,7 +2593,9 @@ function AxisLibrary:CreateWindow(Settings)
 					end)
 
 					Axis.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
-						DropdownOption.UIStroke.Color = SelectedTheme.ElementStroke
+						if not DropdownSettings.OptionBorderColor then
+							DropdownOption.UIStroke.Color = SelectedTheme.ElementStroke
+						end
 					end)
 				end
 			end
@@ -2964,7 +2642,6 @@ function AxisLibrary:CreateWindow(Settings)
 					Dropdown.Selected.Text = DropdownSettings.CurrentOption[1]
 				end
 
-
 				local Success, Response = pcall(function()
 					DropdownSettings.Callback(NewOption)
 				end)
@@ -2989,10 +2666,9 @@ function AxisLibrary:CreateWindow(Settings)
 						end
 					end
 				end
-				--SaveConfiguration()
 			end
 
-			function DropdownSettings:Refresh(optionsTable: table) -- updates a dropdown with new options from optionsTable
+			function DropdownSettings:Refresh(optionsTable: table)
 				DropdownSettings.Options = optionsTable
 				for _, option in Dropdown.List:GetChildren() do
 					if option.ClassName == "Frame" and option.Name ~= "Placeholder" then
@@ -3001,7 +2677,6 @@ function AxisLibrary:CreateWindow(Settings)
 				end
 				SetDropdownOptions()
 
-				-- Apply selected/unselected background colors to new options
 				for _, droption in ipairs(Dropdown.List:GetChildren()) do
 					if droption.ClassName == "Frame" and droption.Name ~= "Placeholder" then
 						if not table.find(DropdownSettings.CurrentOption, droption.Name) then
@@ -3012,7 +2687,6 @@ function AxisLibrary:CreateWindow(Settings)
 					end
 				end
 
-				-- If the dropdown is currently open, make new options visible immediately
 				if Dropdown.List.Visible then
 					for _, DropdownOpt in ipairs(Dropdown.List:GetChildren()) do
 						if DropdownOpt.ClassName == "Frame" and DropdownOpt.Name ~= "Placeholder" then
@@ -3026,6 +2700,10 @@ function AxisLibrary:CreateWindow(Settings)
 				end
 			end
 
+			function DropdownSettings:SetBorderColor(color)
+				Dropdown.UIStroke.Color = color
+			end
+
 			if Settings.ConfigurationSaving then
 				if Settings.ConfigurationSaving.Enabled and DropdownSettings.Flag then
 					AxisLibrary.Flags[DropdownSettings.Flag] = DropdownSettings
@@ -3035,12 +2713,15 @@ function AxisLibrary:CreateWindow(Settings)
 			Axis.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
 				Dropdown.Toggle.ImageColor3 = SelectedTheme.TextColor
 				TweenService:Create(Dropdown, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
+				if not DropdownSettings.BorderColor then
+					Dropdown.UIStroke.Color = SelectedTheme.ElementStroke
+				end
 			end)
 
 			return DropdownSettings
 		end
 
-		-- Keybind
+		-- Keybind com borda personalizável
 		function Tab:CreateKeybind(KeybindSettings)
 			local CheckingForKey = false
 			local Keybind = Elements.Template.Keybind:Clone()
@@ -3048,6 +2729,12 @@ function AxisLibrary:CreateWindow(Settings)
 			Keybind.Title.Text = KeybindSettings.Name
 			Keybind.Visible = true
 			Keybind.Parent = TabPage
+
+			if KeybindSettings.BorderColor then
+				Keybind.UIStroke.Color = KeybindSettings.BorderColor
+			else
+				Keybind.UIStroke.Color = SelectedTheme.ElementStroke
+			end
 
 			Keybind.BackgroundTransparency = 1
 			Keybind.UIStroke.Transparency = 1
@@ -3101,7 +2788,7 @@ function AxisLibrary:CreateWindow(Settings)
 							KeybindSettings.Callback(tostring(NewKeyNoEnum))
 						end
 					end
-				elseif not KeybindSettings.CallOnChange and KeybindSettings.CurrentKeybind ~= nil and (input.KeyCode == Enum.KeyCode[KeybindSettings.CurrentKeybind] and not processed) then -- Test
+				elseif not KeybindSettings.CallOnChange and KeybindSettings.CurrentKeybind ~= nil and (input.KeyCode == Enum.KeyCode[KeybindSettings.CurrentKeybind] and not processed) then
 					local Held = true
 					local Connection
 					Connection = input.Changed:Connect(function(prop)
@@ -3129,10 +2816,10 @@ function AxisLibrary:CreateWindow(Settings)
 						if Held then
 							local Loop; Loop = RunService.Stepped:Connect(function()
 								if not Held then
-									KeybindSettings.Callback(false) -- maybe pcall this
+									KeybindSettings.Callback(false)
 									Loop:Disconnect()
 								else
-									KeybindSettings.Callback(true) -- maybe pcall this
+									KeybindSettings.Callback(true)
 								end
 							end)
 						end
@@ -3158,6 +2845,10 @@ function AxisLibrary:CreateWindow(Settings)
 				end
 			end
 
+			function KeybindSettings:SetBorderColor(color)
+				Keybind.UIStroke.Color = color
+			end
+
 			if Settings.ConfigurationSaving then
 				if Settings.ConfigurationSaving.Enabled and KeybindSettings.Flag then
 					AxisLibrary.Flags[KeybindSettings.Flag] = KeybindSettings
@@ -3167,12 +2858,15 @@ function AxisLibrary:CreateWindow(Settings)
 			Axis.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
 				Keybind.KeybindFrame.BackgroundColor3 = SelectedTheme.InputBackground
 				Keybind.KeybindFrame.UIStroke.Color = SelectedTheme.InputStroke
+				if not KeybindSettings.BorderColor then
+					Keybind.UIStroke.Color = SelectedTheme.ElementStroke
+				end
 			end)
 
 			return KeybindSettings
 		end
 
-		-- Toggle
+		-- Toggle com borda personalizável
 		function Tab:CreateToggle(ToggleSettings)
 			local ToggleValue = {}
 
@@ -3181,6 +2875,12 @@ function AxisLibrary:CreateWindow(Settings)
 			Toggle.Title.Text = ToggleSettings.Name
 			Toggle.Visible = true
 			Toggle.Parent = TabPage
+
+			if ToggleSettings.BorderColor then
+				Toggle.UIStroke.Color = ToggleSettings.BorderColor
+			else
+				Toggle.UIStroke.Color = SelectedTheme.ElementStroke
+			end
 
 			Toggle.BackgroundTransparency = 1
 			Toggle.UIStroke.Transparency = 1
@@ -3240,7 +2940,6 @@ function AxisLibrary:CreateWindow(Settings)
 
 				local Success, Response = pcall(function()
 					if debugX then warn('Running toggle \''..ToggleSettings.Name..'\' (Interact)') end
-
 					ToggleSettings.Callback(ToggleSettings.CurrentValue)
 				end)
 
@@ -3290,7 +2989,6 @@ function AxisLibrary:CreateWindow(Settings)
 
 				local Success, Response = pcall(function()
 					if debugX then warn('Running toggle \''..ToggleSettings.Name..'\' (:Set)') end
-
 					ToggleSettings.Callback(ToggleSettings.CurrentValue)
 				end)
 
@@ -3311,6 +3009,10 @@ function AxisLibrary:CreateWindow(Settings)
 				end
 			end
 
+			function ToggleSettings:SetBorderColor(color)
+				Toggle.UIStroke.Color = color
+			end
+
 			if not ToggleSettings.Ext then
 				if Settings.ConfigurationSaving then
 					if Settings.ConfigurationSaving.Enabled and ToggleSettings.Flag then
@@ -3318,7 +3020,6 @@ function AxisLibrary:CreateWindow(Settings)
 					end
 				end
 			end
-
 
 			Axis.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
 				Toggle.Switch.BackgroundColor3 = SelectedTheme.ToggleBackground
@@ -3338,12 +3039,16 @@ function AxisLibrary:CreateWindow(Settings)
 					Toggle.Switch.Indicator.BackgroundColor3 = SelectedTheme.ToggleEnabled
 					Toggle.Switch.UIStroke.Color = SelectedTheme.ToggleEnabledOuterStroke
 				end
+
+				if not ToggleSettings.BorderColor then
+					Toggle.UIStroke.Color = SelectedTheme.ElementStroke
+				end
 			end)
 
 			return ToggleSettings
 		end
 
-		-- Slider
+		-- Slider com borda personalizável
 		function Tab:CreateSlider(SliderSettings)
 			local SLDragging = false
 			local Slider = Elements.Template.Slider:Clone()
@@ -3351,6 +3056,12 @@ function AxisLibrary:CreateWindow(Settings)
 			Slider.Title.Text = SliderSettings.Name
 			Slider.Visible = true
 			Slider.Parent = TabPage
+
+			if SliderSettings.BorderColor then
+				Slider.UIStroke.Color = SliderSettings.BorderColor
+			else
+				Slider.UIStroke.Color = SelectedTheme.ElementStroke
+			end
 
 			Slider.BackgroundTransparency = 1
 			Slider.UIStroke.Transparency = 1
@@ -3495,6 +3206,10 @@ function AxisLibrary:CreateWindow(Settings)
 				end
 			end
 
+			function SliderSettings:SetBorderColor(color)
+				Slider.UIStroke.Color = color
+			end
+
 			if Settings.ConfigurationSaving then
 				if Settings.ConfigurationSaving.Enabled and SliderSettings.Flag then
 					AxisLibrary.Flags[SliderSettings.Flag] = SliderSettings
@@ -3510,6 +3225,10 @@ function AxisLibrary:CreateWindow(Settings)
 				Slider.Main.UIStroke.Color = SelectedTheme.SliderStroke
 				Slider.Main.Progress.UIStroke.Color = SelectedTheme.SliderStroke
 				Slider.Main.Progress.BackgroundColor3 = SelectedTheme.SliderProgress
+
+				if not SliderSettings.BorderColor then
+					Slider.UIStroke.Color = SelectedTheme.ElementStroke
+				end
 			end)
 
 			return SliderSettings
@@ -3534,7 +3253,6 @@ function AxisLibrary:CreateWindow(Settings)
 
 	Elements.Visible = true
 
-
 	task.wait(1.1)
 	TweenService:Create(Main, TweenInfo.new(0.7, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut), {Size = UDim2.new(0, 390, 0, 90)}):Play()
 	task.wait(0.3)
@@ -3556,7 +3274,6 @@ function AxisLibrary:CreateWindow(Settings)
 	end
 	Topbar.ChangeSize.ImageTransparency = 1
 	Topbar.Hide.ImageTransparency = 1
-
 
 	task.wait(0.5)
 	Topbar.Visible = true
@@ -3596,9 +3313,8 @@ function AxisLibrary:CreateWindow(Settings)
 
 	if not success then warn('Axis had an issue creating settings.') end
 
-	-- Report after createSettings so loadSettings() has run and usageAnalytics reflects the user's saved preference
 	if reporter and getSetting("System", "usageAnalytics") then
-		local themeName = "Default"
+		local themeName = "BlackSquare"
 		if Settings.Theme then
 			if type(Settings.Theme) == "string" then
 				themeName = Settings.Theme
@@ -3610,7 +3326,6 @@ function AxisLibrary:CreateWindow(Settings)
 		local discordInvite = nil
 		if Settings.Discord and Settings.Discord.Enabled and Settings.Discord.Invite and Settings.Discord.Invite ~= "" then
 			local raw = tostring(Settings.Discord.Invite)
-			-- Normalize: strip URL prefixes to extract just the invite code
 			discordInvite = (raw:match("discord%.gg/([%w%-]+)") or raw:match("discord%.com/invite/([%w%-]+)") or raw):sub(1, 32)
 		end
 
@@ -3650,7 +3365,7 @@ function AxisLibrary:IsVisible(): boolean
 	return not Hidden
 end
 
-local hideHotkeyConnection -- Has to be initialized here since the connection is made later in the script
+local hideHotkeyConnection
 function AxisLibrary:Destroy()
 	axisDestroyed = true
 	if hideHotkeyConnection then
@@ -3685,7 +3400,6 @@ Main.Search.Input:GetPropertyChangedSignal('Text'):Connect(function()
 		end
 	else
 		local searchTitle = Elements.UIPageLayout.CurrentPage:FindFirstChild('SearchTitle-fsefsefesfsefesfesfThanks')
-
 		if searchTitle then
 			searchTitle:Destroy()
 		end
@@ -3745,9 +3459,7 @@ if Topbar:FindFirstChild('Settings') then
 			Elements.UIPageLayout:JumpTo(Elements['Axis Settings'])
 		end)
 	end)
-
 end
-
 
 Topbar.Hide.MouseButton1Click:Connect(function()
 	setVisibility(Hidden, not useMobileSizing)
@@ -3787,7 +3499,6 @@ for _, TopbarButton in ipairs(Topbar:GetChildren()) do
 		end)
 	end
 end
-
 
 function AxisLibrary:LoadConfiguration()
 	local config
@@ -3831,11 +3542,8 @@ function AxisLibrary:LoadConfiguration()
 	globalLoaded = true
 end
 
-
-
 if useStudio then
 	-- run w/ studio
-	-- Feel free to place your own script here to see how it'd work in Roblox Studio before running it on your execution software.
 end
 
 if CEnabled and Main:FindFirstChild('Notice') then
@@ -3844,7 +3552,6 @@ if CEnabled and Main:FindFirstChild('Notice') then
 	Main.Notice.Size = UDim2.new(0, 0, 0, 0)
 	Main.Notice.Position = UDim2.new(0.5, 0, 0, -100)
 	Main.Notice.Visible = true
-
 
 	TweenService:Create(Main.Notice, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut), {Size = UDim2.new(0, 280, 0, 35), Position = UDim2.new(0.5, 0, 0, -50), BackgroundTransparency = 0.5}):Play()
 	TweenService:Create(Main.Notice.Title, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {TextTransparency = 0.1}):Play()
@@ -3860,5 +3567,190 @@ task.delay(4, function()
 		Main.Notice.Visible = false
 	end
 end)
+
+-- ============================================
+-- AQUI COMEÇA O SEU HUB - FourHub | SP
+-- ============================================
+
+local Window = AxisLibrary:CreateWindow({
+    Name = "FourHub | SP",
+    Theme = AxisLibrary.Theme.BlackSquare,
+    LoadingTitle = "FourHub",
+    LoadingSubtitle = "Premium Script",
+    ConfigurationSaving = {
+        Enabled = true,
+        FileName = "FourHub_SP",
+        FolderName = "FourHub"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "",
+        RememberJoins = true
+    },
+    KeySystem = false,
+})
+
+-- ABA 1 - Main
+local MainTab = Window:CreateTab("Main", 0)
+
+MainTab:CreateSection("Information")
+
+MainTab:CreateLabel("Priority", nil, nil, true)
+MainTab:CreateLabel("  • Main", nil, nil, true)
+MainTab:CreateLabel("  • Automation", nil, nil, true)
+MainTab:CreateLabel("  • Artifact", nil, nil, true)
+MainTab:CreateLabel("  • Dungeon", nil, nil, true)
+
+MainTab:CreateDivider()
+
+MainTab:CreateLabel("Player", nil, nil, true)
+MainTab:CreateLabel("Teleport", nil, nil, true)
+MainTab:CreateLabel("Webhook", nil, nil, true)
+MainTab:CreateLabel("Misc", nil, nil, true)
+MainTab:CreateLabel("Config", nil, nil, true)
+
+-- ABA 2 - Autofarm
+local AutofarmTab = Window:CreateTab("Autofarm", 0)
+
+AutofarmTab:CreateSection("Search")
+AutofarmTab:CreateLabel("Select Mob(s)", nil, nil, true)
+AutofarmTab:CreateButton({Name = "Refresh", Callback = function() end})
+AutofarmTab:CreateButton({Name = "Autofarm Selected Mob", Callback = function() end})
+AutofarmTab:CreateButton({Name = "Autofarm All Mobs", Callback = function() end})
+
+AutofarmTab:CreateDivider()
+AutofarmTab:CreateSection("Select Type")
+AutofarmTab:CreateLabel("  • All Mob", nil, nil, true)
+AutofarmTab:CreateLabel("  • Normal", nil, nil, true)
+AutofarmTab:CreateButton({Name = "Autofarm Level", Callback = function() end})
+
+-- ABA 3 - Haki
+local HakiTab = Window:CreateTab("Haki", 0)
+
+HakiTab:CreateSection("Haki")
+HakiTab:CreateLabel("Skill", nil, nil, true)
+HakiTab:CreateLabel("Combo", nil, nil, true)
+
+HakiTab:CreateDivider()
+
+HakiTab:CreateToggle({
+    Name = "Auto Observation Haki",
+    CurrentValue = false,
+    Callback = function(Value) end
+})
+
+HakiTab:CreateToggle({
+    Name = "Auto Armament Haki",
+    CurrentValue = false,
+    Callback = function(Value) end
+})
+
+HakiTab:CreateToggle({
+    Name = "Auto Conqueror Haki",
+    CurrentValue = false,
+    Callback = function(Value) end
+})
+
+-- ABA 4 - Title
+local TitleTab = Window:CreateTab("Title", 0)
+
+TitleTab:CreateSection("Title System")
+
+TitleTab:CreateToggle({
+    Name = "Auto Switch Title",
+    CurrentValue = false,
+    Callback = function(Value) end
+})
+
+TitleTab:CreateDropdown({
+    Name = "Select Default Title",
+    Options = {"Pirate", "Marine", "Revolutionary", "Bounty Hunter"},
+    CurrentOption = {"Pirate"},
+    Callback = function(Value) end
+})
+
+TitleTab:CreateDivider()
+
+TitleTab:CreateDropdown({
+    Name = "Title [Mob]",
+    Options = {"Mob Killer", "Beast Hunter", "Demon Slayer"},
+    CurrentOption = {"Mob Killer"},
+    Callback = function(Value) end
+})
+
+TitleTab:CreateDropdown({
+    Name = "Title [Boss]",
+    Options = {"Boss Slayer", "Legendary Hunter", "Mythic Killer"},
+    CurrentOption = {"Boss Slayer"},
+    Callback = function(Value) end
+})
+
+TitleTab:CreateDropdown({
+    Name = "Title [Combo F Move]",
+    Options = {"Combo Master", "F-Key Expert", "Combo Breaker"},
+    CurrentOption = {"Combo Master"},
+    Callback = function(Value) end
+})
+
+TitleTab:CreateDivider()
+
+TitleTab:CreateDropdown({
+    Name = "Title [Boss HP%]",
+    Options = {"50% HP", "30% HP", "20% HP", "10% HP"},
+    CurrentOption = {"20% HP"},
+    Callback = function(Value) end
+})
+
+TitleTab:CreateSlider({
+    Name = "Change Until Boss HP%",
+    Range = {1, 100},
+    Increment = 1,
+    CurrentValue = 15,
+    Suffix = "%",
+    Callback = function(Value) end
+})
+
+-- ABA 5 - Config
+local ConfigTab = Window:CreateTab("Config", 0)
+
+ConfigTab:CreateSection("General Settings")
+
+ConfigTab:CreateToggle({
+    Name = "Auto Save Config",
+    CurrentValue = true,
+    Callback = function(Value) end
+})
+
+ConfigTab:CreateButton({
+    Name = "Save Current Config",
+    Callback = function()
+        AxisLibrary:Notify({
+            Title = "Configuration",
+            Content = "Configuration saved successfully!",
+            Duration = 3
+        })
+    end
+})
+
+ConfigTab:CreateButton({
+    Name = "Load Last Config",
+    Callback = function() end
+})
+
+ConfigTab:CreateDivider()
+ConfigTab:CreateSection("UI Settings")
+
+ConfigTab:CreateButton({
+    Name = "Destroy UI",
+    Callback = function()
+        AxisLibrary:Destroy()
+    end
+})
+
+AxisLibrary:Notify({
+    Title = "FourHub | SP",
+    Content = "Interface carregada com sucesso!",
+    Duration = 3
+})
 
 return AxisLibrary
