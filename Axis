@@ -1,11 +1,9 @@
 --[[
 	Axis Interface Suite
-	by K1
+	by 6q0t
 
-	shlex  | Designing + Programming
-	iRay   | Programming
-	Max    | Programming
-	Damian | Programming
+6q0t | Designing + Programming
+
 ]]
 if debugX then
 	warn('Initialising Axis')
