@@ -1,5 +1,5 @@
 --[[
-	Axis Interface Suite - Four 
+	Axis Interface Suite
 	Customizado: Fundo Preto | Tabs na Direita | Bordas Quadradas | Tecla P para fechar
 ]]
 
@@ -140,7 +140,8 @@ local useStudio = RunService:IsStudio() or false
 
 local settingsCreated = false
 local settingsInitialized = false
-local prompt = useStudio and require(script.Parent.prompt) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua')
+-- LINK DO PROMPT.LUA ATUALIZADO
+local prompt = useStudio and require(script.Parent.prompt) or loadWithTimeout('https://raw.githubusercontent.com/K1NETCX/Axis-hub/refs/heads/main/Prompt.Lua')
 local requestFunc = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
 if not prompt and not useStudio then
