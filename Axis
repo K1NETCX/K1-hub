@@ -1,72 +1,1114 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- 🚀 EXEMPLO DE IMPLEMENTAÇÃO - COMO USAR A UI LIBRARY
+-- 🎨 MODERN UI LIBRARY v1.0 - Engine de Software Sênior
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Autor: Engenheiro de Software Sênior
+-- Design: Glassmorphism + Fluent + Dark Mode Premium
+-- Performance: Otimizada com Maid/Janitor patterns
 -- ═══════════════════════════════════════════════════════════════════════════
 
-local ModernUI = require(script.Parent.ModernUI) -- Ajuste o caminho
+local ModernUI = {}
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
 
--- Criar janela principal
-local MainWindow = ModernUI:CreateWindow("Supreme Hub Premium", {
-    Parent = game.Players.LocalPlayer.PlayerGui
-})
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 🧹 SISTEMA MAID / JANITOR (Prevenção de Memory Leaks)
+-- ═══════════════════════════════════════════════════════════════════════════
+local Maid = {}
+Maid.__index = Maid
 
--- Criar abas
-local HomeTab = MainWindow:CreateTab("Início", "🏠")
-local ActionsTab = MainWindow:CreateTab("Ações", "⚡")
-local SettingsTab = MainWindow:CreateTab("Ajustes", "⚙️")
-local AboutTab = MainWindow:CreateTab("Sobre", "ℹ️")
+function Maid.new()
+    local self = setmetatable({}, Maid)
+    self._tasks = {}
+    self._connections = {}
+    self._instances = {}
+    return self
+end
 
--- ==================== ABA INÍCIO ====================
-HomeTab:CreateSection("✨ Bem-vindo ao Supreme Hub")
-HomeTab:CreateButton("📢 Exibir Notificação de Sucesso", function()
-    ModernUI:Notify("Sucesso!", "Operação realizada com sucesso!", 3, "success")
-end)
+function Maid:AddTask(task)
+    table.insert(self._tasks, task)
+end
 
-HomeTab:CreateButton("⚠️ Exibir Alerta", function()
-    ModernUI:Notify("Atenção", "Isso é um alerta importante!", 3, "warning")
-end)
+function Maid:AddConnection(connection, event)
+    table.insert(self._connections, connection)
+    return connection
+end
 
-HomeTab:CreateSection("🎮 Configurações do Player")
-local speedToggle = HomeTab:CreateToggle("Modo Turbo", false, function(state)
-    ModernUI:Notify("Configuração", "Modo Turbo: " .. (state and "Ativado" or "Desativado"), 2, "info")
-end)
+function Maid:AddInstance(instance)
+    table.insert(self._instances, instance)
+    return instance
+end
 
-local volumeSlider = HomeTab:CreateSlider("Volume do Áudio", 0, 100, 75, function(value)
-    print("Volume alterado para: " .. value .. "%")
-end)
+function Maid:Destroy()
+    for _, task in ipairs(self._tasks) do
+        if type(task) == "function" then task() end
+    end
+    for _, connection in ipairs(self._connections) do
+        if connection and connection.Disconnect then connection:Disconnect() end
+    end
+    for _, instance in ipairs(self._instances) do
+        if instance and instance.Destroy then instance:Destroy() end
+    end
+    self._tasks = nil
+    self._connections = nil
+    self._instances = nil
+end
 
--- ==================== ABA AÇÕES ====================
-ActionsTab:CreateSection("⚡ Ações Rápidas")
-ActionsTab:CreateButton("🔄 Recarregar Interface", function()
-    ModernUI:Notify("Recarregar", "Interface recarregada com sucesso!", 2, "success")
-end)
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 🎨 SISTEMA DE TEMAS E CORES
+-- ═══════════════════════════════════════════════════════════════════════════
+local Theme = {
+    -- Cores Principais
+    Primary = Color3.fromRGB(98, 0, 234),      -- Roxo vibrante
+    PrimaryLight = Color3.fromRGB(156, 39, 176),
+    PrimaryDark = Color3.fromRGB(74, 20, 140),
+    Secondary = Color3.fromRGB(0, 229, 255),   -- Ciano neon
+    Accent = Color3.fromRGB(255, 82, 82),      -- Vermelho suave
+    Success = Color3.fromRGB(0, 230, 118),     -- Verde menta
+    Warning = Color3.fromRGB(255, 193, 7),     -- Âmbar
+    Info = Color3.fromRGB(41, 182, 246),       -- Azul claro
+    
+    -- Cores de Fundo (Glassmorphism)
+    Background = Color3.fromRGB(18, 18, 24),    -- Quase preto
+    Surface = Color3.fromRGB(30, 30, 40),       -- Superfície escura
+    SurfaceHover = Color3.fromRGB(40, 40, 52), -- Hover
+    Glass = Color3.fromRGB(255, 255, 255),      -- Branco para transparência
+    
+    -- Cores de Texto
+    TextPrimary = Color3.fromRGB(255, 255, 255),
+    TextSecondary = Color3.fromRGB(160, 160, 180),
+    TextDisabled = Color3.fromRGB(100, 100, 120),
+    
+    -- Configurações de Transparência
+    GlassAlpha = 0.85,
+    SurfaceAlpha = 0.95,
+}
 
-ActionsTab:CreateButton("📋 Copiar Informações", function()
-    setclipboard("Dados do usuário: " .. game.Players.LocalPlayer.Name)
-    ModernUI:Notify("Copiado!", "Informações copiadas para a área de transferência!", 2, "success")
-end)
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 🔧 UTILITÁRIOS DE ANIMAÇÃO
+-- ═══════════════════════════════════════════════════════════════════════════
+local EasingStyles = {
+    Standard = Enum.EasingStyle.Quad,
+    Bounce = Enum.EasingStyle.Back,
+    Smooth = Enum.EasingStyle.Sine,
+    Elastic = Enum.EasingStyle.Elastic,
+}
 
-local dropdown = ActionsTab:CreateDropdown("Selecionar Modo", {"Modo Fácil", "Modo Normal", "Modo Difícil"}, function(option)
-    ModernUI:Notify("Modo Selecionado", "Você escolheu: " .. option, 2, "info")
-end)
+local EasingDirections = {
+    InOut = Enum.EasingDirection.InOut,
+    In = Enum.EasingDirection.In,
+    Out = Enum.EasingDirection.Out,
+}
 
--- ==================== ABA AJUSTES ====================
-SettingsTab:CreateSection("🖌️ Personalização")
-local themeToggle = SettingsTab:CreateToggle("Modo Escuro", true, function(state)
-    print("Tema alterado: " .. (state and "Escuro" or "Claro"))
-end)
+local function Animate(object, properties, duration, style, direction, callback)
+    local tweenInfo = TweenInfo.new(duration or 0.2, style or EasingStyles.Standard, direction or EasingDirections.InOut)
+    local tween = TweenService:Create(object, tweenInfo, properties)
+    tween:Play()
+    if callback then tween.Completed:Connect(callback) end
+    return tween
+end
 
-SettingsTab:CreateTextbox("Nome do Perfil", "Digite seu nome", function(value)
-    ModernUI:Notify("Perfil", "Nome alterado para: " .. value, 2, "success")
-end)
+local function AnimateBounce(object, properties)
+    return Animate(object, properties, 0.35, EasingStyles.Bounce, EasingDirections.Out)
+end
 
--- ==================== ABA SOBRE ====================
-AboutTab:CreateSection("ℹ️ Sobre o Projeto")
-AboutTab:CreateButton("📖 Ver Documentação", function()
-    ModernUI:Notify("Documentação", "UI Library v1.0 - Desenvolvida com as melhores práticas", 4, "info")
-end)
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 📦 CLASSE BASE PARA COMPONENTES
+-- ═══════════════════════════════════════════════════════════════════════════
+local Component = {}
+Component.__index = Component
 
-AboutTab:CreateButton("💡 Créditos", function()
-    ModernUI:Notify("Créditos", "Engineer: Engenheiro de Software Sênior\nDesign: Glassmorphism Premium", 4, "info")
-end)
+function Component.new()
+    local self = setmetatable({}, Component)
+    self.Maid = Maid.new()
+    self.Instances = {}
+    self.Connections = {}
+    return self
+end
 
-print("✨ UI Library carregada com sucesso!")
+function Component:CreateInstance(className, properties, parent)
+    local instance = Instance.new(className)
+    for prop, value in pairs(properties or {}) do
+        instance[prop] = value
+    end
+    if parent then instance.Parent = parent end
+    table.insert(self.Instances, instance)
+    return instance
+end
+
+function Component:Destroy()
+    if self.Maid then self.Maid:Destroy() end
+    for _, instance in ipairs(self.Instances) do
+        if instance and instance.Destroy then pcall(function() instance:Destroy() end) end
+    end
+    self.Instances = nil
+    self.Connections = nil
+end
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 🪟 CLASSE DA JANELA PRINCIPAL
+-- ═══════════════════════════════════════════════════════════════════════════
+local Window = {}
+Window.__index = Window
+setmetatable(Window, {__index = Component})
+
+function Window.new(title, options)
+    local self = Component.new()
+    setmetatable(self, Window)
+    
+    self.Title = title or "Modern UI"
+    self.Options = options or {}
+    self.Tabs = {}
+    self.ActiveTab = nil
+    self.Dragging = false
+    self.DragStart = nil
+    self.DragStartPos = nil
+    
+    -- Criação da ScreenGui
+    self.ScreenGui = self:CreateInstance("ScreenGui", {
+        Name = "ModernUILibrary",
+        ResetOnSpawn = false,
+        IgnoreGuiInset = true,
+    }, options.Parent or LocalPlayer:WaitForChild("PlayerGui"))
+    
+    -- Fundo escuro com blur
+    self.BackgroundOverlay = self:CreateInstance("Frame", {
+        Name = "BackgroundOverlay",
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+        BackgroundTransparency = 0.4,
+        Visible = false,
+    }, self.ScreenGui)
+    
+    self.BlurEffect = Instance.new("BlurEffect")
+    self.BlurEffect.Size = 0
+    self.BlurEffect.Parent = game:GetService("Lighting")
+    self.Maid:AddInstance(self.BlurEffect)
+    
+    -- Container de notificações (canto inferior direito)
+    self.NotificationContainer = self:CreateInstance("Frame", {
+        Name = "NotificationContainer",
+        Size = UDim2.new(0, 320, 1, -40),
+        Position = UDim2.new(1, -330, 0, 20),
+        BackgroundTransparency = 1,
+    }, self.ScreenGui)
+    
+    local notifLayout = self:CreateInstance("UIListLayout", {
+        Padding = UDim.new(0, 10),
+        HorizontalAlignment = Enum.HorizontalAlignment.Right,
+        VerticalAlignment = Enum.VerticalAlignment.Bottom,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+    }, self.NotificationContainer)
+    
+    -- Janela principal
+    self.MainFrame = self:CreateInstance("Frame", {
+        Name = "MainWindow",
+        Size = UDim2.new(0, 800, 0, 550),
+        Position = UDim2.new(0.5, -400, 0.5, -275),
+        BackgroundColor3 = Theme.Surface,
+        BackgroundTransparency = Theme.SurfaceAlpha,
+        BorderSizePixel = 0,
+        ClipsDescendants = true,
+        Visible = true,
+    }, self.ScreenGui)
+    
+    -- Cantos arredondados da janela
+    local windowCorner = self:CreateInstance("UICorner", {
+        CornerRadius = UDim.new(0, 16),
+    }, self.MainFrame)
+    
+    -- Sombra da janela (UIStroke simulando drop shadow)
+    local windowShadow = self:CreateInstance("UIStroke", {
+        Color = Color3.fromRGB(0, 0, 0),
+        Transparency = 0.6,
+        Thickness = 2,
+        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+    }, self.MainFrame)
+    
+    -- Efeito Glassmorphism (gradiente)
+    local glassGradient = self:CreateInstance("UIGradient", {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Theme.Glass),
+            ColorSequenceKeypoint.new(1, Theme.Glass),
+        }),
+        Transparency = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, 0.05),
+            ColorSequenceKeypoint.new(1, 0.15),
+        }),
+        Rotation = 45,
+    }, self.MainFrame)
+    
+    -- Barra de título / Header
+    self.Header = self:CreateInstance("Frame", {
+        Name = "Header",
+        Size = UDim2.new(1, 0, 0, 65),
+        BackgroundColor3 = Theme.Primary,
+        BackgroundTransparency = 0.1,
+        BorderSizePixel = 0,
+    }, self.MainFrame)
+    
+    local headerCorner = self:CreateInstance("UICorner", {
+        CornerRadius = UDim.new(0, 16),
+    }, self.Header)
+    
+    -- Gradiente do header
+    local headerGradient = self:CreateInstance("UIGradient", {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Theme.Primary),
+            ColorSequenceKeypoint.new(1, Theme.PrimaryLight),
+        }),
+        Rotation = 90,
+    }, self.Header)
+    
+    -- Título
+    self.TitleLabel = self:CreateInstance("TextLabel", {
+        Size = UDim2.new(1, -120, 1, 0),
+        Position = UDim2.new(0, 20, 0, 0),
+        BackgroundTransparency = 1,
+        Text = self.Title,
+        TextColor3 = Theme.TextPrimary,
+        TextSize = 22,
+        Font = Enum.Font.GothamBold,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextTruncate = Enum.TextTruncate.AtEnd,
+    }, self.Header)
+    
+    -- Subtítulo
+    self.SubtitleLabel = self:CreateInstance("TextLabel", {
+        Size = UDim2.new(1, -120, 0, 20),
+        Position = UDim2.new(0, 20, 0, 40),
+        BackgroundTransparency = 1,
+        Text = "UI Library Premium • Glassmorphism Design",
+        TextColor3 = Theme.TextSecondary,
+        TextSize = 11,
+        Font = Enum.Font.Gotham,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextTransparency = 0.3,
+    }, self.Header)
+    
+    -- Botão Minimizar
+    self.MinimizeButton = self:CreateInstance("ImageButton", {
+        Size = UDim2.new(0, 32, 0, 32),
+        Position = UDim2.new(1, -75, 0, 16),
+        BackgroundColor3 = Theme.Warning,
+        BackgroundTransparency = 0.3,
+        Image = "rbxassetid://4475813627",
+        ImageColor3 = Theme.TextPrimary,
+    }, self.Header)
+    
+    local minCorner = self:CreateInstance("UICorner", {
+        CornerRadius = UDim.new(1, 0),
+    }, self.MinimizeButton)
+    
+    -- Botão Fechar
+    self.CloseButton = self:CreateInstance("ImageButton", {
+        Size = UDim2.new(0, 32, 0, 32),
+        Position = UDim2.new(1, -40, 0, 16),
+        BackgroundColor3 = Theme.Accent,
+        BackgroundTransparency = 0.3,
+        Image = "rbxassetid://4475813622",
+        ImageColor3 = Theme.TextPrimary,
+    }, self.Header)
+    
+    local closeCorner = self:CreateInstance("UICorner", {
+        CornerRadius = UDim.new(1, 0),
+    }, self.CloseButton)
+    
+    -- Container de conteúdo (central)
+    self.ContentContainer = self:CreateInstance("Frame", {
+        Name = "ContentContainer",
+        Size = UDim2.new(1, -20, 1, -85),
+        Position = UDim2.new(0, 10, 0, 75),
+        BackgroundTransparency = 1,
+    }, self.MainFrame)
+    
+    -- Sidebar (navegação de abas)
+    self.Sidebar = self:CreateInstance("Frame", {
+        Name = "Sidebar",
+        Size = UDim2.new(0, 180, 1, 0),
+        BackgroundColor3 = Theme.Background,
+        BackgroundTransparency = 0.3,
+    }, self.ContentContainer)
+    
+    local sidebarCorner = self:CreateInstance("UICorner", {
+        CornerRadius = UDim.new(0, 12),
+    }, self.Sidebar)
+    
+    -- Layout das abas na sidebar
+    self.TabsLayout = self:CreateInstance("UIListLayout", {
+        Padding = UDim.new(0, 8),
+        HorizontalAlignment = Enum.HorizontalAlignment.Center,
+        VerticalAlignment = Enum.VerticalAlignment.Top,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+    }, self.Sidebar)
+    
+    local tabsPadding = self:CreateInstance("UIPadding", {
+        PaddingTop = UDim.new(0, 16),
+        PaddingBottom = UDim.new(0, 16),
+    }, self.Sidebar)
+    
+    -- Container de páginas (onde o conteúdo das abas aparece)
+    self.PagesContainer = self:CreateInstance("Frame", {
+        Name = "PagesContainer",
+        Size = UDim2.new(1, -195, 1, 0),
+        Position = UDim2.new(0, 190, 0, 0),
+        BackgroundTransparency = 1,
+    }, self.ContentContainer)
+    
+    -- Configurar drag da janela
+    self:SetupDragging()
+    self:SetupButtonEvents()
+    
+    return self
+end
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 🖱️ SISTEMA DE DRAG & DROP (Smooth Dragging com Interpolação)
+-- ═══════════════════════════════════════════════════════════════════════════
+function Window:SetupDragging()
+    local dragData = {
+        active = false,
+        startPos = nil,
+        startMousePos = nil,
+    }
+    
+    -- Explicação matemática:
+    -- O arrasto suave é implementado calculando a diferença entre a posição atual do mouse
+    -- e a posição inicial do clique. Essa diferença é somada à posição original da janela.
+    -- Usamos RenderStepped para interpolação natural a 60fps, evitando "tearing" visual.
+    
+    local function updateDrag()
+        if not dragData.active then return end
+        
+        local delta = UserInputService:GetMouseLocation() - dragData.startMousePos
+        local newPos = UDim2.new(0, dragData.startPos.X.Offset + delta.X, 0, dragData.startPos.Y.Offset + delta.Y)
+        
+        -- Limites para evitar que a janela saia da tela
+        local maxX = 0
+        local maxY = 0
+        local viewportSize = workspace.CurrentCamera.ViewportSize
+        
+        if newPos.X.Offset < -self.MainFrame.AbsoluteSize.X + 50 then
+            newPos = UDim2.new(0, -self.MainFrame.AbsoluteSize.X + 50, newPos.Y.Offset, newPos.Y.Offset)
+        end
+        if newPos.X.Offset > viewportSize.X - 50 then
+            newPos = UDim2.new(0, viewportSize.X - 50, newPos.Y.Offset, newPos.Y.Offset)
+        end
+        if newPos.Y.Offset < 0 then
+            newPos = UDim2.new(newPos.X.Offset, newPos.X.Offset, 0, 0)
+        end
+        if newPos.Y.Offset > viewportSize.Y - self.MainFrame.AbsoluteSize.Y + 50 then
+            newPos = UDim2.new(newPos.X.Offset, newPos.X.Offset, 0, viewportSize.Y - self.MainFrame.AbsoluteSize.Y + 50)
+        end
+        
+        self.MainFrame.Position = newPos
+    end
+    
+    local connection
+    local function startDrag(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local mousePos = UserInputService:GetMouseLocation()
+            local framePos = self.MainFrame.AbsolutePosition
+            
+            if mousePos.X >= framePos.X and mousePos.X <= framePos.X + self.MainFrame.AbsoluteSize.X and
+               mousePos.Y >= framePos.Y and mousePos.Y <= framePos.Y + 65 then
+                dragData.active = true
+                dragData.startPos = self.MainFrame.Position
+                dragData.startMousePos = mousePos
+                connection = RunService.RenderStepped:Connect(updateDrag)
+            end
+        end
+    end
+    
+    local function stopDrag()
+        dragData.active = false
+        if connection then connection:Disconnect() end
+    end
+    
+    self.Maid:AddConnection(UserInputService.InputBegan:Connect(startDrag))
+    self.Maid:AddConnection(UserInputService.InputEnded:Connect(stopDrag))
+end
+
+function Window:SetupButtonEvents()
+    -- Efeitos hover e click nos botões
+    local function setupButton(button, hoverColor, clickScale)
+        button.MouseEnter:Connect(function()
+            Animate(button, {BackgroundTransparency = 0.1}, 0.2)
+        end)
+        button.MouseLeave:Connect(function()
+            Animate(button, {BackgroundTransparency = 0.3}, 0.2)
+        end)
+        button.MouseButton1Click:Connect(function()
+            AnimateBounce(button, {Size = UDim2.new(button.Size.X.Scale, button.Size.X.Offset, 0.9, button.Size.Y.Offset)})
+            task.wait(0.08)
+            AnimateBounce(button, {Size = UDim2.new(button.Size.X.Scale, button.Size.X.Offset, 1, button.Size.Y.Offset)})
+        end)
+    end
+    
+    setupButton(self.MinimizeButton)
+    setupButton(self.CloseButton)
+    
+    self.MinimizeButton.MouseButton1Click:Connect(function()
+        self:Minimize()
+    end)
+    
+    self.CloseButton.MouseButton1Click:Connect(function()
+        self:Destroy()
+    end)
+end
+
+function Window:Minimize()
+    local isMinimized = self.MainFrame.Size.Y.Scale == 0
+    if isMinimized then
+        Animate(self.MainFrame, {Size = UDim2.new(0, 800, 0, 550), Position = UDim2.new(0.5, -400, 0.5, -275)}, 0.3, EasingStyles.Elastic, EasingDirections.Out)
+        self.ContentContainer.Visible = true
+    else
+        Animate(self.MainFrame, {Size = UDim2.new(0, 800, 0, 65), Position = UDim2.new(0.5, -400, 0, 0)}, 0.3)
+        self.ContentContainer.Visible = false
+    end
+end
+
+function Window:CreateTab(name, icon)
+    local tab = {}
+    tab.Name = name
+    tab.Icon = icon or "📄"
+    tab.Window = self
+    tab.Components = {}
+    tab.Maid = Maid.new()
+    
+    -- Botão da aba na sidebar
+    tab.Button = Instance.new("TextButton")
+    tab.Button.Name = "Tab_" .. name:gsub("%s+", "")
+    tab.Button.Size = UDim2.new(0.85, 0, 0, 45)
+    tab.Button.BackgroundColor3 = Theme.Surface
+    tab.Button.BackgroundTransparency = 0.5
+    tab.Button.Text = tab.Icon .. "  " .. name
+    tab.Button.TextColor3 = Theme.TextSecondary
+    tab.Button.TextSize = 14
+    tab.Button.Font = Enum.Font.GothamSemibold
+    tab.Button.BorderSizePixel = 0
+    tab.Button.Parent = self.Sidebar
+    
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim.new(0, 10)
+    buttonCorner.Parent = tab.Button
+    
+    -- Página de conteúdo
+    tab.Page = Instance.new("ScrollingFrame")
+    tab.Page.Name = "Page_" .. name:gsub("%s+", "")
+    tab.Page.Size = UDim2.new(1, -20, 1, -20)
+    tab.Page.Position = UDim2.new(0, 10, 0, 10)
+    tab.Page.BackgroundTransparency = 1
+    tab.Page.BorderSizePixel = 0
+    tab.ScrollThickness = 6
+    tab.Page.ScrollBarImageColor3 = Theme.Primary
+    tab.Page.ScrollBarThickness = 8
+    tab.Page.Visible = false
+    tab.Page.Parent = self.PagesContainer
+    
+    local pageLayout = Instance.new("UIListLayout")
+    pageLayout.Padding = UDim.new(0, 12)
+    pageLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    pageLayout.Parent = tab.Page
+    
+    local pagePadding = Instance.new("UIPadding")
+    pagePadding.PaddingTop = UDim.new(0, 10)
+    pagePadding.PaddingBottom = UDim.new(0, 10)
+    pagePadding.Parent = tab.Page
+    
+    -- Evento de clique na aba
+    local function selectTab()
+        if self.ActiveTab then
+            Animate(self.ActiveTab.Button, {BackgroundTransparency = 0.5, TextColor3 = Theme.TextSecondary}, 0.2)
+            Animate(self.ActiveTab.Page, {BackgroundTransparency = 1}, 0.15, nil, nil, function()
+                self.ActiveTab.Page.Visible = false
+            end)
+        end
+        
+        self.ActiveTab = tab
+        Animate(tab.Button, {BackgroundTransparency = 0.2, TextColor3 = Theme.TextPrimary}, 0.2)
+        
+        tab.Page.Visible = true
+        Animate(tab.Page, {BackgroundTransparency = 0}, 0.3)
+        
+        -- Efeito de fade in
+        for _, child in ipairs(tab.Page:GetChildren()) do
+            if child:IsA("GuiObject") then
+                child.BackgroundTransparency = 1
+                Animate(child, {BackgroundTransparency = child.BackgroundTransparency - 0.5}, 0.2)
+            end
+        end
+    end
+    
+    tab.Button.MouseButton1Click:Connect(selectTab)
+    
+    -- Selecionar primeira aba automaticamente
+    if #self.Tabs == 0 then
+        selectTab()
+    end
+    
+    table.insert(self.Tabs, tab)
+    
+    -- Métodos para adicionar componentes à aba
+    function tab:CreateButton(text, callback)
+        return self.Window:CreateButton(self, text, callback)
+    end
+    
+    function tab:CreateToggle(text, default, callback)
+        return self.Window:CreateToggle(self, text, default, callback)
+    end
+    
+    function tab:CreateSlider(text, min, max, default, callback)
+        return self.Window:CreateSlider(self, text, min, max, default, callback)
+    end
+    
+    function tab:CreateDropdown(text, options, callback)
+        return self.Window:CreateDropdown(self, text, options, callback)
+    end
+    
+    function tab:CreateTextbox(text, placeholder, callback)
+        return self.Window:CreateTextbox(self, text, placeholder, callback)
+    end
+    
+    function tab:CreateSection(text)
+        return self.Window:CreateSection(self, text)
+    end
+    
+    return tab
+end
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 🧩 COMPONENTES UI
+-- ═══════════════════════════════════════════════════════════════════════════
+
+function Window:CreateSection(parent, text)
+    local section = Instance.new("Frame")
+    section.Size = UDim2.new(0.95, 0, 0, 40)
+    section.BackgroundColor3 = Theme.Surface
+    section.BackgroundTransparency = 0.5
+    section.Parent = parent.Page
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = section
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -20, 1, 0)
+    label.Position = UDim2.new(0, 10, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Theme.PrimaryLight
+    label.TextSize = 14
+    label.Font = Enum.Font.GothamBold
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = section
+    
+    return section
+end
+
+function Window:CreateButton(parent, text, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.95, 0, 0, 50)
+    button.BackgroundColor3 = Theme.Primary
+    button.BackgroundTransparency = 0.15
+    button.Text = text
+    button.TextColor3 = Theme.TextPrimary
+    button.TextSize = 15
+    button.Font = Enum.Font.GothamSemibold
+    button.BorderSizePixel = 0
+    button.AutoButtonColor = false
+    button.Parent = parent.Page
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = button
+    
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Theme.Primary),
+        ColorSequenceKeypoint.new(1, Theme.PrimaryLight),
+    })
+    gradient.Rotation = 45
+    gradient.Parent = button
+    
+    -- Animações
+    button.MouseEnter:Connect(function()
+        Animate(button, {BackgroundTransparency = 0.05}, 0.2)
+        Animate(button, {Size = UDim2.new(0.97, 0, 0, 52)}, 0.15)
+    end)
+    
+    button.MouseLeave:Connect(function()
+        Animate(button, {BackgroundTransparency = 0.15}, 0.2)
+        Animate(button, {Size = UDim2.new(0.95, 0, 0, 50)}, 0.15)
+    end)
+    
+    button.MouseButton1Click:Connect(function()
+        AnimateBounce(button, {Size = UDim2.new(0.93, 0, 0, 48)})
+        task.wait(0.08)
+        AnimateBounce(button, {Size = UDim2.new(0.95, 0, 0, 50)})
+        if callback then callback() end
+    end)
+    
+    return button
+end
+
+function Window:CreateToggle(parent, text, default, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.95, 0, 0, 50)
+    frame.BackgroundColor3 = Theme.Surface
+    frame.BackgroundTransparency = 0.5
+    frame.Parent = parent.Page
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = frame
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -70, 1, 0)
+    label.Position = UDim2.new(0, 15, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Theme.TextPrimary
+    label.TextSize = 14
+    label.Font = Enum.Font.Gotham
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+    
+    local toggleBtn = Instance.new("ImageButton")
+    toggleBtn.Size = UDim2.new(0, 50, 0, 26)
+    toggleBtn.Position = UDim2.new(1, -65, 0.5, -13)
+    toggleBtn.BackgroundColor3 = Theme.TextDisabled
+    toggleBtn.BackgroundTransparency = 0
+    toggleBtn.BorderSizePixel = 0
+    toggleBtn.Parent = frame
+    
+    local toggleCorner = Instance.new("UICorner")
+    toggleCorner.CornerRadius = UDim.new(1, 0)
+    toggleCorner.Parent = toggleBtn
+    
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0, 22, 0, 22)
+    knob.Position = UDim2.new(0, 2, 0.5, -11)
+    knob.BackgroundColor3 = Theme.TextPrimary
+    knob.BorderSizePixel = 0
+    knob.Parent = toggleBtn
+    
+    local knobCorner = Instance.new("UICorner")
+    knobCorner.CornerRadius = UDim.new(1, 0)
+    knobCorner.Parent = knob
+    
+    local toggled = default or false
+    local function updateToggle()
+        if toggled then
+            Animate(toggleBtn, {BackgroundColor3 = Theme.Success}, 0.2)
+            Animate(knob, {Position = UDim2.new(0, 26, 0.5, -11)}, 0.2, EasingStyles.Bounce, EasingDirections.Out)
+        else
+            Animate(toggleBtn, {BackgroundColor3 = Theme.TextDisabled}, 0.2)
+            Animate(knob, {Position = UDim2.new(0, 2, 0.5, -11)}, 0.2, EasingStyles.Bounce, EasingDirections.Out)
+        end
+    end
+    
+    toggleBtn.MouseButton1Click:Connect(function()
+        toggled = not toggled
+        updateToggle()
+        if callback then callback(toggled) end
+    end)
+    
+    updateToggle()
+    
+    return {frame, toggleBtn}
+end
+
+function Window:CreateSlider(parent, text, min, max, default, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.95, 0, 0, 70)
+    frame.BackgroundColor3 = Theme.Surface
+    frame.BackgroundTransparency = 0.5
+    frame.Parent = parent.Page
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = frame
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.7, 0, 0, 25)
+    label.Position = UDim2.new(0, 15, 0, 5)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Theme.TextPrimary
+    label.TextSize = 14
+    label.Font = Enum.Font.Gotham
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+    
+    local valueLabel = Instance.new("TextLabel")
+    valueLabel.Size = UDim2.new(0.25, 0, 0, 25)
+    valueLabel.Position = UDim2.new(0.7, 0, 0, 5)
+    valueLabel.BackgroundTransparency = 1
+    valueLabel.Text = tostring(default or min)
+    valueLabel.TextColor3 = Theme.PrimaryLight
+    valueLabel.TextSize = 14
+    valueLabel.Font = Enum.Font.GothamBold
+    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    valueLabel.Parent = frame
+    
+    local sliderTrack = Instance.new("Frame")
+    sliderTrack.Size = UDim2.new(0.9, 0, 0, 4)
+    sliderTrack.Position = UDim2.new(0.05, 0, 0, 45)
+    sliderTrack.BackgroundColor3 = Theme.TextDisabled
+    sliderTrack.BackgroundTransparency = 0.5
+    sliderTrack.Parent = frame
+    
+    local trackCorner = Instance.new("UICorner")
+    trackCorner.CornerRadius = UDim.new(1, 0)
+    trackCorner.Parent = sliderTrack
+    
+    local sliderFill = Instance.new("Frame")
+    sliderFill.Size = UDim2.new(0, 0, 1, 0)
+    sliderFill.BackgroundColor3 = Theme.Primary
+    sliderFill.Parent = sliderTrack
+    
+    local fillCorner = Instance.new("UICorner")
+    fillCorner.CornerRadius = UDim.new(1, 0)
+    fillCorner.Parent = sliderFill
+    
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0, 18, 0, 18)
+    knob.Position = UDim2.new(0, -9, 0, -7)
+    knob.BackgroundColor3 = Theme.PrimaryLight
+    knob.BorderSizePixel = 0
+    knob.Parent = sliderFill
+    
+    local knobCorner = Instance.new("UICorner")
+    knobCorner.CornerRadius = UDim.new(1, 0)
+    knobCorner.Parent = knob
+    
+    local value = default or min
+    local function updateSlider(input)
+        local trackPos = sliderTrack.AbsolutePosition.X
+        local trackSize = sliderTrack.AbsoluteSize.X
+        local mouseX = (input or UserInputService:GetMouseLocation()).X
+        local percent = math.clamp((mouseX - trackPos) / trackSize, 0, 1)
+        value = min + (max - min) * percent
+        value = math.floor(value * 100) / 100
+        
+        sliderFill.Size = UDim2.new(percent, 0, 1, 0)
+        valueLabel.Text = tostring(value)
+        if callback then callback(value) end
+    end
+    
+    local dragging = false
+    local connection
+    
+    sliderTrack.MouseButton1Down:Connect(function(input)
+        dragging = true
+        updateSlider(input)
+        connection = RunService.RenderStepped:Connect(function()
+            if dragging then updateSlider() end
+        end)
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging then
+            dragging = false
+            if connection then connection:Disconnect() end
+        end
+    end)
+    
+    -- Inicializar
+    local initialPercent = (value - min) / (max - min)
+    sliderFill.Size = UDim2.new(initialPercent, 0, 1, 0)
+    valueLabel.Text = tostring(value)
+    
+    return {frame, sliderFill, knob}
+end
+
+function Window:CreateDropdown(parent, text, options, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.95, 0, 0, 50)
+    frame.BackgroundColor3 = Theme.Surface
+    frame.BackgroundTransparency = 0.5
+    frame.Parent = parent.Page
+    frame.ClipsDescendants = true
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = frame
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.5, 0, 1, 0)
+    label.Position = UDim2.new(0, 15, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Theme.TextPrimary
+    label.TextSize = 14
+    label.Font = Enum.Font.Gotham
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+    
+    local dropdownBtn = Instance.new("TextButton")
+    dropdownBtn.Size = UDim2.new(0.4, 0, 0.6, 0)
+    dropdownBtn.Position = UDim2.new(0.55, 0, 0.2, 0)
+    dropdownBtn.BackgroundColor3 = Theme.Primary
+    dropdownBtn.BackgroundTransparency = 0.3
+    dropdownBtn.Text = options[1] or "Selecione"
+    dropdownBtn.TextColor3 = Theme.TextPrimary
+    dropdownBtn.TextSize = 13
+    dropdownBtn.Font = Enum.Font.Gotham
+    dropdownBtn.Parent = frame
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 8)
+    btnCorner.Parent = dropdownBtn
+    
+    local dropdownContainer = Instance.new("Frame")
+    dropdownContainer.Size = UDim2.new(0.4, 0, 0, 0)
+    dropdownContainer.Position = UDim2.new(0.55, 0, 0.8, 0)
+    dropdownContainer.BackgroundColor3 = Theme.Surface
+    dropdownContainer.BackgroundTransparency = 0.1
+    dropdownContainer.ClipsDescendants = true
+    dropdownContainer.Visible = false
+    dropdownContainer.Parent = frame
+    
+    local containerCorner = Instance.new("UICorner")
+    containerCorner.CornerRadius = UDim.new(0, 8)
+    containerCorner.Parent = dropdownContainer
+    
+    local optionsLayout = Instance.new("UIListLayout")
+    optionsLayout.Padding = UDim.new(0, 2)
+    optionsLayout.Parent = dropdownContainer
+    
+    local expanded = false
+    local selectedValue = options[1]
+    
+    for _, option in ipairs(options) do
+        local optBtn = Instance.new("TextButton")
+        optBtn.Size = UDim2.new(1, 0, 0, 30)
+        optBtn.BackgroundColor3 = Theme.Surface
+        optBtn.BackgroundTransparency = 0.3
+        optBtn.Text = option
+        optBtn.TextColor3 = Theme.TextSecondary
+        optBtn.TextSize = 12
+        optBtn.Font = Enum.Font.Gotham
+        optBtn.Parent = dropdownContainer
+        
+        local optCorner = Instance.new("UICorner")
+        optCorner.CornerRadius = UDim.new(0, 6)
+        optCorner.Parent = optBtn
+        
+        optBtn.MouseButton1Click:Connect(function()
+            selectedValue = option
+            dropdownBtn.Text = option
+            if callback then callback(option) end
+            dropdownContainer.Visible = false
+            expanded = false
+            Animate(frame, {Size = UDim2.new(0.95, 0, 0, 50)}, 0.2)
+        end)
+        
+        optBtn.MouseEnter:Connect(function()
+            Animate(optBtn, {BackgroundTransparency = 0.1, TextColor3 = Theme.TextPrimary}, 0.1)
+        end)
+        
+        optBtn.MouseLeave:Connect(function()
+            Animate(optBtn, {BackgroundTransparency = 0.3, TextColor3 = Theme.TextSecondary}, 0.1)
+        end)
+    end
+    
+    dropdownBtn.MouseButton1Click:Connect(function()
+        expanded = not expanded
+        if expanded then
+            dropdownContainer.Visible = true
+            local optionCount = #options
+            local newHeight = 50 + (optionCount * 32) + 10
+            Animate(frame, {Size = UDim2.new(0.95, 0, 0, newHeight)}, 0.3)
+            Animate(dropdownContainer, {Size = UDim2.new(0.4, 0, 0, optionCount * 32 + 10)}, 0.3)
+        else
+            Animate(frame, {Size = UDim2.new(0.95, 0, 0, 50)}, 0.3)
+            task.wait(0.25)
+            dropdownContainer.Visible = false
+            dropdownContainer.Size = UDim2.new(0.4, 0, 0, 0)
+        end
+    end)
+    
+    return {frame, dropdownBtn, dropdownContainer}
+end
+
+function Window:CreateTextbox(parent, text, placeholder, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.95, 0, 0, 70)
+    frame.BackgroundColor3 = Theme.Surface
+    frame.BackgroundTransparency = 0.5
+    frame.Parent = parent.Page
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = frame
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -20, 0, 25)
+    label.Position = UDim2.new(0, 15, 0, 5)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Theme.TextPrimary
+    label.TextSize = 14
+    label.Font = Enum.Font.Gotham
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+    
+    local textbox = Instance.new("TextBox")
+    textbox.Size = UDim2.new(0.9, 0, 0, 30)
+    textbox.Position = UDim2.new(0.05, 0, 0, 35)
+    textbox.BackgroundColor3 = Theme.Background
+    textbox.BackgroundTransparency = 0.3
+    textbox.PlaceholderText = placeholder or "Digite aqui..."
+    textbox.PlaceholderColor3 = Theme.TextDisabled
+    textbox.TextColor3 = Theme.TextPrimary
+    textbox.TextSize = 14
+    textbox.Font = Enum.Font.Gotham
+    textbox.ClearTextOnFocus = false
+    textbox.Parent = frame
+    
+    local boxCorner = Instance.new("UICorner")
+    boxCorner.CornerRadius = UDim.new(0, 8)
+    boxCorner.Parent = textbox
+    
+    textbox.FocusLost:Connect(function(enterPressed)
+        if enterPressed and callback then
+            callback(textbox.Text)
+        end
+    end)
+    
+    textbox:GetPropertyChangedSignal("Text"):Connect(function()
+        -- Animação do campo em foco
+        if textbox:IsFocused() then
+            Animate(textbox, {BackgroundTransparency = 0.1}, 0.1)
+        else
+            Animate(textbox, {BackgroundTransparency = 0.3}, 0.1)
+        end
+    end)
+    
+    return {frame, textbox}
+end
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 🔔 SISTEMA DE NOTIFICAÇÕES
+-- ═══════════════════════════════════════════════════════════════════════════
+
+function ModernUI:Notify(title, message, duration, type)
+    type = type or "info"
+    duration = duration or 3
+    
+    local colors = {
+        success = Theme.Success,
+        error = Theme.Accent,
+        warning = Theme.Warning,
+        info = Theme.Primary,
+    }
+    
+    local notification = Instance.new("Frame")
+    notification.Size = UDim2.new(0, 300, 0, 0)
+    notification.BackgroundColor3 = Theme.Surface
+    notification.BackgroundTransparency = 0.1
+    notification.ClipsDescendants = true
+    notification.BorderSizePixel = 0
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = notification
+    
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = colors[type] or Theme.Primary
+    stroke.Thickness = 2
+    stroke.Transparency = 0.5
+    stroke.Parent = notification
+    
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, colors[type] or Theme.Primary),
+        ColorSequenceKeypoint.new(1, (colors[type] or Theme.Primary):Lerp(Theme.Surface, 0.8)),
+    })
+    gradient.Transparency = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, 0.7),
+        ColorSequenceKeypoint.new(1, 0.95),
+    })
+    gradient.Rotation = 45
+    gradient.Parent = notification
+    
+    local icon = Instance.new("TextLabel")
+    icon.Size = UDim2.new(0, 40, 1, 0)
+    icon.BackgroundTransparency = 1
+    icon.Text = type == "success" and "✓" or type == "error" and "✕" or type == "warning" and "⚠" or "ℹ"
+    icon.TextColor3 = colors[type] or Theme.Primary
+    icon.TextSize = 24
+    icon.Font = Enum.Font.GothamBold
+    icon.Parent = notification
+    
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -50, 0, 25)
+    titleLabel.Position = UDim2.new(0, 50, 0, 5)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = title
+    titleLabel.TextColor3 = Theme.TextPrimary
+    titleLabel.TextSize = 14
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = notification
+    
+    local messageLabel = Instance.new("TextLabel")
+    messageLabel.Size = UDim2.new(1, -50, 0, 35)
+    messageLabel.Position = UDim2.new(0, 50, 0, 30)
+    messageLabel.BackgroundTransparency = 1
+    messageLabel.Text = message
+    messageLabel.TextColor3 = Theme.TextSecondary
+    messageLabel.TextSize = 12
+    messageLabel.Font = Enum.Font.Gotham
+    messageLabel.TextXAlignment = Enum.TextXAlignment.Left
+    messageLabel.TextWrapped = true
+    messageLabel.Parent = notification
+    
+    -- Encontrar o container de notificações
+    local container = nil
+    for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
+        if gui.Name == "ModernUILibrary" then
+            for _, child in ipairs(gui:GetChildren()) do
+                if child.Name == "NotificationContainer" then
+                    container = child
+                    break
+                end
+            end
+        end
+    end
+    
+    if container then
+        notification.Parent = container
+        
+        -- Animação de entrada
+        notification.Size = UDim2.new(0, 300, 0, 0)
+        notification.Position = UDim2.new(1, 0, 0, 0)
+        notification.BackgroundTransparency = 1
+        
+        Animate(notification, {Size = UDim2.new(0, 300, 0, 70), Position = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 0.1}, 0.3, EasingStyles.Standard, EasingDirections.Out)
+        
+        -- Auto destruir
+        task.delay(duration, function()
+            if notification and notification.Parent then
+                Animate(notification, {Size = UDim2.new(0, 300, 0, 0), Position = UDim2.new(1, 0, 0, 0)}, 0.3, EasingStyles.Standard, EasingDirections.In, function()
+                    pcall(function() notification:Destroy() end)
+                end)
+            end
+        end)
+    end
+end
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 🔗 EXPORTAÇÃO DA BIBLIOTECA
+-- ═══════════════════════════════════════════════════════════════════════════
+
+function ModernUI:CreateWindow(title, options)
+    return Window.new(title, options)
+end
+
+return ModernUI
